@@ -1,3 +1,11 @@
+Versão 1.3.0
+• Mais modelos: Stanley Classic Hydration 750 ml, Legendary 750 ml, Quick Flip 710 ml e Go 1,06 L, IceFlow 650 ml, AeroLight 473 ml, Quencher 414 ml; Owala FreeSip 562 ml e SmoothSip 355 ml; Hydro Flask 532 ml, 710 ml e 1,18 L; Contigo Byron 591 ml
+• Novos formatos: térmica com alça lateral, tampa flip e copo térmico com tampa
+• Corrigido: ícones de caneca e garrafa térmica que vazavam para fora do quadro
+• Lista de copos alinhada
+• "Simular lembrete real": vê exatamente o que um usuário comum vê, sem botão Cancelar
+• Histórico: botões "Zerar hoje" e "Apagar todo o histórico"
+
 Versão 1.2.0
 • Visual novo e próprio nos Ajustes: interruptores com gotinha, seletores em pílula, botões − / + e cartões
 • Galeria de garrafas por marca, com o desenho de cada modelo: Stanley (Quencher, IceFlow, AeroLight, Clássica), Owala (FreeSip, Twist), Hydro Flask e Pacco (Hydra, Vyta)
