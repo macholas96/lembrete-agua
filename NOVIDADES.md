@@ -1,8 +1,10 @@
-Versão 1.1.1
-• Reconhece muito melhor garrafas (inclusive térmicas escuras): a câmera agora analisa a região em volta da sua mão
+Versão 1.2.0
+• Visual novo e próprio nos Ajustes: interruptores com gotinha, seletores em pílula, botões − / + e cartões
+• Galeria de garrafas por marca, com o desenho de cada modelo: Stanley (Quencher, IceFlow, AeroLight, Clássica), Owala (FreeSip, Twist), Hydro Flask e Pacco (Hydra, Vyta)
+• "Não sei o modelo": escolha pelo formato e pelo tamanho que vem embaixo da garrafa
+• Reconhece muito melhor garrafas (inclusive térmicas escuras): a câmera analisa a região em volta da sua mão
 • A garrafa pode ser reconhecida em qualquer momento da verificação, não só colada na boca
 • Se não reconhecer, o app pede para mostrar a garrafa de frente e mostra o que a câmera está vendo
-• Nova etiqueta "Copo/garrafa" na tela da câmera
 
 Versão 1.1.0
 • App de verdade: instalação por DMG (arrastar para Aplicativos) e ícone novo
