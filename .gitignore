@@ -1,3 +1,4 @@
 telas/
 *.app
 .DS_Store
+*.zip
