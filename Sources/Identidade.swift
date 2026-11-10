@@ -270,6 +270,7 @@ struct BotaoAgua: ButtonStyle {
 struct MenuAgua<Valor: Hashable>: View {
     let opcoes: [(valor: Valor, rotulo: String)]
     @Binding var selecao: Valor
+    var largura: CGFloat? = nil
 
     var body: some View {
         Menu {
@@ -281,12 +282,16 @@ struct MenuAgua<Valor: Hashable>: View {
                 Text(opcoes.first { $0.valor == selecao }?.rotulo ?? "—")
                     .font(.system(size: 12.5, weight: .semibold))
                     .foregroundColor(Estilo.tinta)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: largura == nil ? nil : CGFloat.infinity, alignment: .leading)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(Estilo.azul)
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 12)
+            .frame(width: largura)
             .background(Capsule().fill(Marca.azulClaro))
         }
         .menuStyle(.borderlessButton)

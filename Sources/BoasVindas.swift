@@ -158,8 +158,8 @@ struct BoasVindasView: View {
             HStack(spacing: 20) {
                 IconeRecipiente(tipo: "copo", tamanho: 64)
                 IconeRecipiente(tipo: "caneca", tamanho: 64)
-                ForEach([0, 7, 3, 14], id: \.self) { i in
-                    let g = Catalogo.garrafas[i]
+                ForEach(["Quencher H2.0 887 ml", "Classic Hydration 750 ml", "FreeSip 710 ml (24 oz)", "Hydra V2 500 ml"], id: \.self) { nome in
+                    let g = Catalogo.primeiro(nome)
                     IconeProduto(desenho: g.desenho, cor: Color(hex: g.cor), corTampa: Color(hex: g.corTampa), tamanho: 72)
                 }
             }

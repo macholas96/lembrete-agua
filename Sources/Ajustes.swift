@@ -18,6 +18,7 @@ final class AcoesAjustes {
     var testarAgora: @MainActor () -> Void = {}
     var testarPreAviso: @MainActor () -> Void = {}
     var mostrarWidget: @MainActor () -> Void = {}
+    var simularReal: @MainActor () -> Void = {}
 }
 
 /// Linha com um botão de teste à direita.
@@ -71,11 +72,16 @@ struct AjustesView: View {
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(Estilo.tinta)
                 Spacer()
+                Button { acoes.simularReal() } label: {
+                    Label("Simular lembrete real", systemImage: "lock.fill")
+                }
+                .buttonStyle(BotaoAgua(tipo: .discreto, grande: true))
+                .help("Exatamente como um usuário comum vê: sem botão Cancelar e com tudo bloqueado. Só sai bebendo água (ou desligando o Mac).")
                 Button { acoes.testarAgora() } label: {
-                    Label("Testar agora: beber água", systemImage: "drop.fill")
+                    Label("Testar agora", systemImage: "drop.fill")
                 }
                 .buttonStyle(BotaoAgua(tipo: .primario, grande: true))
-                .help("Abre a tela de lembrete agora, do começo ao fim (registra o copo se você beber).")
+                .help("Abre a tela de lembrete agora, com botão Cancelar (registra o copo se você beber).")
             }
             .padding(.horizontal, 26)
             .padding(.top, 16)
@@ -460,9 +466,13 @@ private struct LinhaCopo: View {
     var body: some View {
         HStack(spacing: 12) {
             IconeCopo(copo: copo, tamanho: 40)
+                .frame(width: 44, height: 44)
+                .clipped()
             CampoAgua(dica: "Nome", texto: $nome)
+                .frame(maxWidth: .infinity)
             PassoAgua(valor: $ml, faixa: 50...3000, passo: 10) { "\($0) ml" }
-            MenuAgua(opcoes: Catalogo.nomesDesenhos.map { (valor: $0.id, rotulo: $0.nome) }, selecao: $desenho)
+                .fixedSize()
+            MenuAgua(opcoes: Catalogo.nomesDesenhos.map { (valor: $0.id, rotulo: $0.nome) }, selecao: $desenho, largura: 210)
             Button(action: apagar) {
                 Image(systemName: "trash")
                     .font(.system(size: 12, weight: .semibold))
@@ -663,6 +673,20 @@ struct AbaHistorico: View {
                 Button { exportar() } label: { Label("Exportar CSV", systemImage: "square.and.arrow.up") }
                     .buttonStyle(BotaoAgua(tipo: .secundario))
             }
+            CartaoSecao(titulo: "Recomeçar", icone: "arrow.counterclockwise") {
+                LinhaAjuste(titulo: "Zerar o dia de hoje", detalhe: "Apaga só os copos registrados hoje") {
+                    Button("Zerar hoje") {
+                        if confirmar("Zerar os copos de hoje?", "Os \(store.coposHoje) copos registrados hoje serão apagados.") { store.zerarHoje() }
+                    }
+                    .buttonStyle(BotaoAgua(tipo: .discreto))
+                }
+                LinhaAjuste(titulo: "Apagar todo o histórico", detalhe: "Copos, sequência, conquistas e registros de pulo. Seus ajustes continuam.", ultima: true) {
+                    Button("Apagar tudo") {
+                        if confirmar("Apagar todo o histórico?", "Isso não pode ser desfeito.") { store.apagarHistorico() }
+                    }
+                    .buttonStyle(BotaoAgua(tipo: .discreto))
+                }
+            }
         }
     }
 
@@ -687,6 +711,16 @@ struct AbaHistorico: View {
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.white))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Marca.borda, lineWidth: 1))
+    }
+
+    func confirmar(_ titulo: String, _ texto: String) -> Bool {
+        let a = NSAlert()
+        a.messageText = titulo
+        a.informativeText = texto
+        a.alertStyle = .warning
+        a.addButton(withTitle: "Apagar")
+        a.addButton(withTitle: "Cancelar")
+        return a.runModal() == .alertFirstButtonReturn
     }
 
     func exportar() {

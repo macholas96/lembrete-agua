@@ -62,7 +62,11 @@ private func escalar(_ p: Path, _ r: CGRect, _ vb: CGSize = CGSize(width: 60, he
     let s = min(r.width / vb.width, r.height / vb.height)
     let dx = r.minX + (r.width - vb.width * s) / 2
     let dy = r.minY + (r.height - vb.height * s) / 2
-    return p.applying(CGAffineTransform(a: s, b: 0, c: 0, d: s, tx: dx, ty: dy))
+    // Converte para CGPath antes de transformar: retângulos arredondados "puros" do SwiftUI
+    // ignoravam a escala em Path.applying e vazavam para fora do ícone.
+    var t = CGAffineTransform(a: s, b: 0, c: 0, d: s, tx: dx, ty: dy)
+    let cg = p.cgPath
+    return Path(cg.copy(using: &t) ?? cg)
 }
 
 struct FormaRecipiente: Shape {

@@ -94,6 +94,12 @@ final class Controlador: NSObject, NSApplicationDelegate {
         barra.versaoDisponivel = { [weak self] in self?.atualizador.disponivel?.versao }
 
         ajustes.acoes.testarAgora = { [weak self] in self?.testarPelosAjustes() }
+        ajustes.acoes.simularReal = { [weak self] in
+            guard let self else { return }
+            self.reabrirAjustes = true
+            self.ajustes.esconderTemporariamente()
+            self.mostrarOverlay(voluntario: false)
+        }
         ajustes.acoes.testarPreAviso = { [weak self] in
             self?.bolha.mostrar("Água em 1 min — já pega o copo! (teste)", segundos: 6)
         }

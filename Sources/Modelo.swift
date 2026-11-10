@@ -446,6 +446,16 @@ final class Store: ObservableObject {
         }
     }
 
+    /// Apagar registros só deixa as coisas mais rígidas (precisa beber de novo), então vale na hora.
+    func zerarHoje() {
+        historico.registros.removeAll { calendario.isDateInToday($0.data) }
+    }
+
+    func apagarHistorico() {
+        historico = Historico()
+        estado.conquistas = [:]
+    }
+
     func avaliarConquistas() -> [Conquista] {
         var novas: [Conquista] = []
         for c in Gamificacao.conquistas where estado.conquistas[c.id] == nil && conquistou(c.id) {

@@ -25,36 +25,56 @@ enum Catalogo {
         ModeloGarrafa(marca: "Stanley", nome: "Quencher H2.0 1,18 L", ml: 1180, desenho: "quencher", cor: "#EBB8C3", corTampa: "#F3CDD5"),
         ModeloGarrafa(marca: "Stanley", nome: "Quencher H2.0 887 ml", ml: 887, desenho: "quencher", cor: "#A9C7B6", corTampa: "#C2D9CB"),
         ModeloGarrafa(marca: "Stanley", nome: "Quencher 591 ml", ml: 591, desenho: "quencher", cor: "#EFE3CC", corTampa: "#E2D2B4"),
+        ModeloGarrafa(marca: "Stanley", nome: "Quencher 414 ml", ml: 414, desenho: "quencher", cor: "#C9D9F0", corTampa: "#B3C7E6"),
+        ModeloGarrafa(marca: "Stanley", nome: "Classic Hydration 750 ml", ml: 750, desenho: "hydration", cor: "#1F2124", corTampa: "#3B3E44"),
+        ModeloGarrafa(marca: "Stanley", nome: "Legendary Classic 750 ml", ml: 750, desenho: "classica", cor: "#3E6B48", corTampa: "#2F5537"),
+        ModeloGarrafa(marca: "Stanley", nome: "Legendary Classic 1 L", ml: 1000, desenho: "classica", cor: "#3E6B48", corTampa: "#2F5537"),
+        ModeloGarrafa(marca: "Stanley", nome: "Quick Flip 710 ml", ml: 710, desenho: "quickflip", cor: "#5E7C99", corTampa: "#2F3A46"),
+        ModeloGarrafa(marca: "Stanley", nome: "Go Quick Flip 1,06 L", ml: 1060, desenho: "quickflip", cor: "#2E4A3B", corTampa: "#1E2B24"),
         ModeloGarrafa(marca: "Stanley", nome: "IceFlow Flip Straw 887 ml", ml: 887, desenho: "iceflow", cor: "#33404F", corTampa: "#1F2733"),
+        ModeloGarrafa(marca: "Stanley", nome: "IceFlow Flip Straw 650 ml", ml: 650, desenho: "iceflow", cor: "#D9C7E8", corTampa: "#9C86B5"),
         ModeloGarrafa(marca: "Stanley", nome: "AeroLight Fast Flow 710 ml", ml: 710, desenho: "aerolight", cor: "#6C8EBF", corTampa: "#3E5F8F"),
         ModeloGarrafa(marca: "Stanley", nome: "AeroLight Transit 591 ml", ml: 591, desenho: "aerolight", cor: "#E6DDCC", corTampa: "#8C7B63"),
-        ModeloGarrafa(marca: "Stanley", nome: "Clássica Legendary 1 L", ml: 1000, desenho: "classica", cor: "#3E6B48", corTampa: "#2F5537"),
+        ModeloGarrafa(marca: "Stanley", nome: "AeroLight Flip Straw 473 ml", ml: 473, desenho: "aerolight", cor: "#F2B5A0", corTampa: "#C9735A"),
         // Owala
+        ModeloGarrafa(marca: "Owala", nome: "FreeSip 562 ml (19 oz)", ml: 562, desenho: "owala", cor: "#F4D35E", corTampa: "#3D7DD8"),
         ModeloGarrafa(marca: "Owala", nome: "FreeSip 710 ml (24 oz)", ml: 710, desenho: "owala", cor: "#4FB7B3", corTampa: "#F2A1B8"),
         ModeloGarrafa(marca: "Owala", nome: "FreeSip 946 ml (32 oz)", ml: 946, desenho: "owala", cor: "#1E2F4D", corTampa: "#F4C542"),
         ModeloGarrafa(marca: "Owala", nome: "FreeSip 1,18 L (40 oz)", ml: 1180, desenho: "owala", cor: "#7A5BC7", corTampa: "#B9F0D8"),
         ModeloGarrafa(marca: "Owala", nome: "FreeSip Twist 532 ml (18 oz)", ml: 532, desenho: "twist", cor: "#F6D3C4", corTampa: "#E7836B"),
         ModeloGarrafa(marca: "Owala", nome: "FreeSip Twist 710 ml (24 oz)", ml: 710, desenho: "twist", cor: "#CFE3F7", corTampa: "#7FA7D6"),
+        ModeloGarrafa(marca: "Owala", nome: "SmoothSip Slider 355 ml", ml: 355, desenho: "tumbler", cor: "#E9A5C0", corTampa: "#B7517E"),
         // Hydro Flask
+        ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 532 ml (18 oz)", ml: 532, desenho: "hydro", cor: "#7BC6A4", corTampa: "#202225"),
+        ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 710 ml (24 oz)", ml: 710, desenho: "hydro", cor: "#F2C14E", corTampa: "#202225"),
         ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 946 ml (32 oz)", ml: 946, desenho: "hydro", cor: "#2C6E9B", corTampa: "#202225"),
+        ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 1,18 L (40 oz)", ml: 1180, desenho: "hydro", cor: "#4A4E57", corTampa: "#202225"),
         ModeloGarrafa(marca: "Hydro Flask", nome: "Standard Mouth 621 ml (21 oz)", ml: 621, desenho: "hydro", cor: "#E86F5C", corTampa: "#202225"),
         // Pacco
         ModeloGarrafa(marca: "Pacco", nome: "Hydra V2 500 ml", ml: 500, desenho: "pacco", cor: "#2B2B2E", corTampa: "#45454A"),
         ModeloGarrafa(marca: "Pacco", nome: "Hydra V3 500 ml (cerâmica)", ml: 500, desenho: "pacco", cor: "#E7E3DA", corTampa: "#B9B2A4"),
         ModeloGarrafa(marca: "Pacco", nome: "Hydra V2 1,2 L", ml: 1200, desenho: "pacco", cor: "#3C4A3E", corTampa: "#2B332C"),
         ModeloGarrafa(marca: "Pacco", nome: "Vyta 1,2 L", ml: 1200, desenho: "pacco", cor: "#9DB8D9", corTampa: "#5E7EA8"),
+        // Contigo
+        ModeloGarrafa(marca: "Contigo", nome: "Byron Snapseal 591 ml", ml: 591, desenho: "tumbler", cor: "#3D4F63", corTampa: "#1E2833"),
     ]
 
+    static func primeiro(_ nome: String) -> ModeloGarrafa { garrafas.first { $0.nome == nome } ?? garrafas[0] }
+
     static let marcas: [InfoMarca] = [
-        InfoMarca(nome: "Stanley", descricao: "Quencher, IceFlow, AeroLight, Clássica", exemplo: garrafas[0]),
-        InfoMarca(nome: "Owala", descricao: "FreeSip e FreeSip Twist", exemplo: garrafas[7]),
-        InfoMarca(nome: "Hydro Flask", descricao: "Wide e Standard Mouth", exemplo: garrafas[12]),
-        InfoMarca(nome: "Pacco", descricao: "Hydra e Vyta", exemplo: garrafas[14]),
+        InfoMarca(nome: "Stanley", descricao: "Quencher, Classic, Quick Flip, IceFlow, AeroLight", exemplo: primeiro("Classic Hydration 750 ml")),
+        InfoMarca(nome: "Owala", descricao: "FreeSip, Twist, SmoothSip", exemplo: primeiro("FreeSip 710 ml (24 oz)")),
+        InfoMarca(nome: "Hydro Flask", descricao: "Wide e Standard Mouth", exemplo: primeiro("Wide Mouth 946 ml (32 oz)")),
+        InfoMarca(nome: "Pacco", descricao: "Hydra e Vyta", exemplo: primeiro("Hydra V2 500 ml")),
+        InfoMarca(nome: "Contigo", descricao: "Byron", exemplo: primeiro("Byron Snapseal 591 ml")),
     ]
 
     /// Para quem não sabe o modelo: escolhe o formato e o tamanho (vem escrito embaixo da garrafa).
     static let formatos: [(desenho: String, nome: String, cor: String, corTampa: String)] = [
-        ("pacco", "Garrafa térmica", "#2F3640", "#4A5260"),
+        ("hydration", "Térmica com alça lateral", "#1F2124", "#3B3E44"),
+        ("pacco", "Térmica com argola", "#2F3640", "#4A5260"),
+        ("quickflip", "Garrafa de tampa flip", "#5E7C99", "#2F3A46"),
+        ("tumbler", "Copo térmico com tampa", "#C9D6E8", "#7C93B5"),
         ("iceflow", "Garrafa com alça", "#5B6B7C", "#2E3946"),
         ("owala", "Garrafa esportiva", "#4FB7B3", "#2E7D7A"),
         ("quencher", "Copão com canudo", "#C9D6E8", "#AFC0D8"),
@@ -71,6 +91,7 @@ enum Catalogo {
         ("quencher", "Copão estilo Quencher"), ("iceflow", "Garrafa com alça (IceFlow)"), ("aerolight", "Garrafa fina (AeroLight)"),
         ("classica", "Garrafa clássica (Legendary)"), ("owala", "Garrafa esportiva (FreeSip)"), ("twist", "Garrafa Twist"),
         ("hydro", "Garrafa Wide Mouth"), ("pacco", "Garrafa térmica com argola"),
+        ("hydration", "Garrafa Classic Hydration"), ("quickflip", "Garrafa Quick Flip"), ("tumbler", "Copo térmico com tampa"),
     ]
 }
 
@@ -85,7 +106,7 @@ extension Color {
 // MARK: - Desenhos dos produtos (área 60×60)
 
 enum DesenhoProduto {
-    static let todos: Set<String> = ["quencher", "iceflow", "aerolight", "classica", "owala", "twist", "hydro", "pacco"]
+    static let todos: Set<String> = ["quencher", "iceflow", "aerolight", "classica", "owala", "twist", "hydro", "pacco", "hydration", "quickflip", "tumbler"]
 
     static func corpo(_ d: String) -> Path {
         var p = Path()
@@ -107,6 +128,11 @@ enum DesenhoProduto {
             p.addLine(to: CGPoint(x: 24, y: 58)); p.addQuadCurve(to: CGPoint(x: 18, y: 52), control: CGPoint(x: 18, y: 58))
             p.addLine(to: CGPoint(x: 18, y: 23)); p.addQuadCurve(to: CGPoint(x: 23, y: 15), control: CGPoint(x: 18, y: 16))
             p.closeSubpath()
+        case "hydration": p.addRoundedRect(in: CGRect(x: 20.5, y: 14, width: 19, height: 44), cornerSize: CGSize(width: 7, height: 7))
+        case "quickflip": p.addRoundedRect(in: CGRect(x: 18, y: 17, width: 24, height: 41), cornerSize: CGSize(width: 8, height: 8))
+        case "tumbler":
+            p.move(to: CGPoint(x: 15, y: 15)); p.addLine(to: CGPoint(x: 45, y: 15))
+            p.addLine(to: CGPoint(x: 41, y: 57)); p.addLine(to: CGPoint(x: 19, y: 57)); p.closeSubpath()
         default: // pacco
             p.addRoundedRect(in: CGRect(x: 20, y: 15, width: 20, height: 43), cornerSize: CGSize(width: 9, height: 9))
         }
@@ -125,6 +151,11 @@ enum DesenhoProduto {
             p.addRoundedRect(in: CGRect(x: 20, y: 6.5, width: 6, height: 3.5), cornerSize: CGSize(width: 1.5, height: 1.5))
         case "twist": p.addRoundedRect(in: CGRect(x: 20.5, y: 8, width: 19, height: 11), cornerSize: CGSize(width: 4, height: 4))
         case "hydro": p.addRoundedRect(in: CGRect(x: 23, y: 6, width: 14, height: 10), cornerSize: CGSize(width: 3, height: 3))
+        case "hydration": p.addRoundedRect(in: CGRect(x: 22.5, y: 5, width: 15, height: 10), cornerSize: CGSize(width: 3, height: 3))
+        case "quickflip":
+            p.addRoundedRect(in: CGRect(x: 18.5, y: 8, width: 23, height: 10), cornerSize: CGSize(width: 4, height: 4))
+            p.addRoundedRect(in: CGRect(x: 32, y: 5.5, width: 7, height: 3.5), cornerSize: CGSize(width: 1.5, height: 1.5))
+        case "tumbler": p.addRoundedRect(in: CGRect(x: 13, y: 9, width: 34, height: 7), cornerSize: CGSize(width: 3, height: 3))
         default: p.addRoundedRect(in: CGRect(x: 22.5, y: 7, width: 15, height: 9), cornerSize: CGSize(width: 3, height: 3))
         }
         return p
@@ -153,6 +184,12 @@ enum DesenhoProduto {
             p.move(to: CGPoint(x: 39.5, y: 10)); p.addCurve(to: CGPoint(x: 39.5, y: 17), control1: CGPoint(x: 46, y: 10), control2: CGPoint(x: 46, y: 17))
         case "hydro":
             p.move(to: CGPoint(x: 37, y: 8)); p.addCurve(to: CGPoint(x: 37, y: 14), control1: CGPoint(x: 44, y: 8), control2: CGPoint(x: 44, y: 14))
+        case "hydration":
+            p.move(to: CGPoint(x: 37.5, y: 6.5)); p.addCurve(to: CGPoint(x: 37.5, y: 14), control1: CGPoint(x: 47, y: 6.5), control2: CGPoint(x: 47, y: 14))
+        case "quickflip":
+            p.move(to: CGPoint(x: 20, y: 10)); p.addCurve(to: CGPoint(x: 30, y: 10), control1: CGPoint(x: 20, y: 2), control2: CGPoint(x: 30, y: 2))
+        case "tumbler":
+            p.move(to: CGPoint(x: 24, y: 12.5)); p.addLine(to: CGPoint(x: 33, y: 12.5))
         default: // pacco: argola no topo
             p.addEllipse(in: CGRect(x: 25.5, y: 1, width: 9, height: 7))
         }
@@ -164,7 +201,9 @@ private func escala60(_ p: Path, _ r: CGRect) -> Path {
     let s = min(r.width / 60, r.height / 60)
     let dx = r.minX + (r.width - 60 * s) / 2
     let dy = r.minY + (r.height - 60 * s) / 2
-    return p.applying(CGAffineTransform(a: s, b: 0, c: 0, d: s, tx: dx, ty: dy))
+    var t = CGAffineTransform(a: s, b: 0, c: 0, d: s, tx: dx, ty: dy)
+    let cg = p.cgPath
+    return Path(cg.copy(using: &t) ?? cg)
 }
 
 struct FormaProduto: Shape {
