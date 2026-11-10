@@ -1,3 +1,9 @@
+Versão 1.1.1
+• Reconhece muito melhor garrafas (inclusive térmicas escuras): a câmera agora analisa a região em volta da sua mão
+• A garrafa pode ser reconhecida em qualquer momento da verificação, não só colada na boca
+• Se não reconhecer, o app pede para mostrar a garrafa de frente e mostra o que a câmera está vendo
+• Nova etiqueta "Copo/garrafa" na tela da câmera
+
 Versão 1.1.0
 • App de verdade: instalação por DMG (arrastar para Aplicativos) e ícone novo
 • Boas-vindas em slides explicando como funciona

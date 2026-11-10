@@ -302,9 +302,9 @@ private struct Pilula: View {
             if estado == 1 { Circle().frame(width: 7, height: 7) }
             Text(texto)
         }
-        .font(.system(size: 13, weight: .semibold))
+        .font(.system(size: 12, weight: .semibold))
         .padding(.vertical, 6)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 10)
         .foregroundColor(estado == 2 ? Color(red: 0.08, green: 0.5, blue: 0.24) : (estado == 1 ? Color(red: 0.09, green: 0.4, blue: 0.79) : Estilo.tinta2))
         .background(Capsule().fill(estado == 2 ? Estilo.verde.opacity(0.14) : (estado == 1 ? Estilo.azul.opacity(0.14) : Estilo.tinta.opacity(0.06))))
     }
@@ -364,9 +364,10 @@ struct TelaCamera: View {
 
             HStack(spacing: 8) {
                 Pilula(texto: "Rosto", estado: s.etapa >= 1 ? 2 : (s.rosto ? 1 : 0))
-                Pilula(texto: "Copo na boca", estado: s.etapa >= 2 ? 2 : (s.naBoca ? 1 : 0))
-                Pilula(texto: s.etapa == 1 ? String(format: "Bebendo… %.1f s", s.segundos) : "Bebendo",
+                Pilula(texto: "Na boca", estado: s.etapa >= 2 ? 2 : (s.naBoca ? 1 : 0))
+                Pilula(texto: s.etapa == 1 ? String(format: "Bebendo %.1f s", s.segundos) : "Bebendo",
                        estado: s.etapa >= 2 ? 2 : (s.etapa == 1 && s.naBoca ? 1 : 0))
+                Pilula(texto: "Copo/garrafa", estado: s.copoConfirmado ? 2 : (s.copo ? 1 : 0))
                 Pilula(texto: "Afastar", estado: s.etapa >= 3 ? 2 : (s.etapa == 2 ? 1 : 0))
             }
             .padding(.bottom, 12)
@@ -377,6 +378,15 @@ struct TelaCamera: View {
                 .font(.system(size: 17, weight: .bold))
                 .foregroundColor(Estilo.tinta)
                 .padding(.top, 14)
+
+            if s.etapa >= 1 && !s.copoConfirmado && s.segundos >= 2 && !s.diagnostico.isEmpty {
+                Text("A câmera está vendo: \(s.diagnostico)")
+                    .font(.system(size: 11))
+                    .foregroundColor(Estilo.tinta3)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.top, 4)
+            }
 
             HStack(spacing: 10) {
                 Button("Recomeçar") { fluxo.acaoRecomecar() }.buttonStyle(BotaoSecundario())

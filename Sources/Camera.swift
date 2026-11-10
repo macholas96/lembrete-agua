@@ -17,6 +17,8 @@ struct StatusVerificacao {
     var rostoRect: CGRect? = nil  // normalizado (Vision: origem embaixo à esquerda)
     var maoRect: CGRect? = nil
     var aspecto: CGFloat = 4.0 / 3.0
+    var copoConfirmado = false          // copo/garrafa já reconhecido nesta verificação
+    var diagnostico = ""                // o que a câmera está reconhecendo (para ajudar quando falha)
 }
 
 // MARK: - Verificador (Vision, 100% local; nenhum quadro é guardado)
@@ -44,14 +46,25 @@ final class Verificador: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
     private var acumBebendo = 0.0
     private var quadrosBebendo = 0
     private var quadrosComCopo = 0
+    private var vistasCopo = 0
+    private var diagnostico = ""
     private var acumAfastar = 0.0
 
     static let palavrasCopo: Set<String> = [
         "cup", "cups", "mug", "bottle", "bottles", "glass", "wineglass", "beverage", "drink",
         "drinks", "tumbler", "flask", "thermos", "teacup", "jug", "straw", "water", "canteen",
+        "drinkware", "jar", "pitcher", "carafe", "vacuum", "can", "beer", "soda", "coffee", "tea",
     ]
     static let camerasProibidas = ["virtual", "obs", "snap", "manycam", "xsplit", "mmhmm",
                                    "camtwist", "ndi", "vcam", "screen", "syphon"]
+
+    static func temRecipiente(_ resultados: [VNClassificationObservation], minimo: Float) -> Bool {
+        for c in resultados where c.confidence > minimo {
+            let tokens = c.identifier.lowercased().split(whereSeparator: { $0 == "_" || $0 == " " }).map(String.init)
+            if tokens.contains(where: { palavrasCopo.contains($0) }) { return true }
+        }
+        return false
+    }
 
     static func escolherCamera() -> AVCaptureDevice? {
         var tipos: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera]
@@ -122,7 +135,7 @@ final class Verificador: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
     private func resetar() {
         ultimaAmostra = 0; contador = 0; ultimoRosto = nil; tempoUltimoRosto = 0
         tempoUltimoCopo = -100; etapa = 0; acumPreparo = 0; acumBebendo = 0
-        quadrosBebendo = 0; quadrosComCopo = 0; acumAfastar = 0
+        quadrosBebendo = 0; quadrosComCopo = 0; acumAfastar = 0; vistasCopo = 0; diagnostico = ""
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -174,12 +187,30 @@ final class Verificador: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
             }
         }
 
-        // Copo / garrafa
+        // Copo / garrafa: olha a imagem inteira e, principalmente, um recorte em volta da mão
+        // (garrafas escuras ou pequenas na imagem quase nunca aparecem na classificação da imagem inteira).
         if classificar {
-            for c in reqClasse.results ?? [] where c.confidence > 0.1 {
-                let tokens = c.identifier.lowercased().split(whereSeparator: { $0 == "_" || $0 == " " }).map(String.init)
-                if tokens.contains(where: { Verificador.palavrasCopo.contains($0) }) { tempoUltimoCopo = agora; break }
+            var achou = Verificador.temRecipiente(reqClasse.results ?? [], minimo: 0.1)
+            var melhores = reqClasse.results ?? []
+            if let m = maoRect {
+                let lado = max(m.width * aspecto, m.height) * 3.2
+                let w = min(1, lado / aspecto), h = min(1, lado)
+                let x = min(max(0, m.midX - w / 2), 1 - w)
+                let y = min(max(0, m.midY - h * 0.45), 1 - h)
+                let reqRecorte = VNClassifyImageRequest()
+                reqRecorte.regionOfInterest = CGRect(x: x, y: y, width: w, height: h)
+                if (try? VNImageRequestHandler(cvPixelBuffer: pb, orientation: .up, options: [:]).perform([reqRecorte])) != nil {
+                    let r = reqRecorte.results ?? []
+                    if Verificador.temRecipiente(r, minimo: 0.06) { achou = true }
+                    melhores = r
+                }
             }
+            if achou {
+                tempoUltimoCopo = agora
+                vistasCopo += 1
+            }
+            diagnostico = melhores.sorted(by: { $0.confidence > $1.confidence }).prefix(4).map { "\($0.identifier.replacingOccurrences(of: "_", with: " ")) \(Int($0.confidence * 100))%" }
+                .joined(separator: " · ")
         }
         let temCopo = agora - tempoUltimoCopo < 1.0
 
@@ -196,12 +227,16 @@ final class Verificador: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
                 quadrosBebendo += 1
                 if temCopo { quadrosComCopo += 1 }
             }
-            let copoOk = !exigirCopo || quadrosComCopo >= max(3, quadrosBebendo / 5)
+            // O recipiente pode ser reconhecido em qualquer momento da verificação (não só colado na boca).
+            let copoOk = !exigirCopo || vistasCopo >= 2
             if acumBebendo >= segundosNecessarios && copoOk { etapa = 2 }
-            if temRosto && naBoca && exigirCopo && !temCopo { msg = "Não estou vendo o copo — deixe-o bem visível." }
-            else if acumBebendo >= segundosNecessarios { msg = "Continue, preciso ver o copo mais um pouco…" }
-            else if acumBebendo > 0.3 { msg = "Isso! Continue bebendo…" }
-            else { msg = "Leve o copo à boca e beba." }
+            if acumBebendo >= segundosNecessarios && !copoOk {
+                msg = "Bebeu! Agora mostre o copo/garrafa de frente para a câmera, perto do rosto."
+            } else if acumBebendo > 0.3 {
+                msg = "Isso! Continue bebendo…"
+            } else {
+                msg = "Leve o copo ou a garrafa à boca e beba."
+            }
         case 2:
             if rostoAgora != nil && !naBoca { acumAfastar += dt } else { acumAfastar = 0 }
             if acumAfastar >= 0.7 { etapa = 3 }
@@ -215,6 +250,8 @@ final class Verificador: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
         s.etapa = etapa; s.segundos = acumBebendo
         s.rostoRect = temRosto ? ultimoRosto : nil
         s.maoRect = maoRect
+        s.copoConfirmado = vistasCopo >= 2
+        s.diagnostico = diagnostico
         s.aspecto = aspecto
         switch etapa {
         case 0: s.progresso = 0.15 * min(1, acumPreparo / 0.7)
