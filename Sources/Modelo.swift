@@ -12,8 +12,6 @@ enum Caminhos {
     static let estado = dados.appendingPathComponent("estado.json")
     static let historico = dados.appendingPathComponent("historico.json")
     static let testar = dados.appendingPathComponent("testar")
-    static let fonte = dados.appendingPathComponent("fonte.txt")
-    static let app = home.appendingPathComponent("Applications/LembreteAgua.app")
 }
 
 enum JSON {
@@ -112,7 +110,8 @@ struct Regras: Codable, Equatable {
     var segundosBebendo = 2.5
     var exigirCopo = true
     var adiarEmChamadas = true
-    var adiarMaxMin = 30
+    var adiarMaxMin = 0                // 0 = sem limite: nunca interrompe uma chamada
+    var usarMicrofone = true           // microfone em uso também conta como chamada
 
     /// true se `self` for menos rígida que `a` em qualquer ponto.
     func maisFrouxa(que a: Regras) -> Bool {
@@ -124,7 +123,9 @@ struct Regras: Codable, Equatable {
         if pararAoBaterMeta && !a.pararAoBaterMeta { return true }
         if segundosBebendo < a.segundosBebendo { return true }
         if !exigirCopo && a.exigirCopo { return true }
-        if adiarEmChamadas && (!a.adiarEmChamadas || adiarMaxMin > a.adiarMaxMin) { return true }
+        let meuMax = adiarMaxMin == 0 ? Int.max : adiarMaxMin
+        let maxA = a.adiarMaxMin == 0 ? Int.max : a.adiarMaxMin
+        if adiarEmChamadas && (!a.adiarEmChamadas || meuMax > maxA || (usarMicrofone && !a.usarMicrofone)) { return true }
         return false
     }
 }
@@ -162,8 +163,48 @@ struct Preferencias: Codable, Equatable {
     var widgetTamanho = "medio"        // pequeno | medio | grande
     var widgetEstilo = "escuro"        // escuro | claro
     var barraMenu = "ml"               // ml | pct | icone
-    var autoAtualizar = true
-    var fonteAtualizacao = ""          // usuario/repositorio no GitHub
+    var verificarAtualizacoes = true   // só verifica e avisa; instalar é sempre um clique da pessoa
+}
+
+// MARK: - Catálogo de garrafas
+
+struct ModeloGarrafa: Identifiable {
+    var id: String { marca + nome }
+    let marca: String
+    let nome: String
+    let ml: Int
+    let icone: String
+}
+
+enum Catalogo {
+    static let marcas = ["Stanley", "Owala", "Hydro Flask", "Pacco", "Comum"]
+    static let garrafas: [ModeloGarrafa] = [
+        ModeloGarrafa(marca: "Stanley", nome: "Quencher 1,18 L (40 oz)", ml: 1180, icone: "copao"),
+        ModeloGarrafa(marca: "Stanley", nome: "Quencher 887 ml (30 oz)", ml: 887, icone: "copao"),
+        ModeloGarrafa(marca: "Stanley", nome: "Quencher 591 ml (20 oz)", ml: 591, icone: "copao"),
+        ModeloGarrafa(marca: "Stanley", nome: "Quencher 414 ml (14 oz)", ml: 414, icone: "copao"),
+        ModeloGarrafa(marca: "Stanley", nome: "IceFlow 887 ml (30 oz)", ml: 887, icone: "termica"),
+        ModeloGarrafa(marca: "Stanley", nome: "Clássica 1 L", ml: 1000, icone: "termica"),
+        ModeloGarrafa(marca: "Owala", nome: "FreeSip 562 ml (19 oz)", ml: 562, icone: "termica"),
+        ModeloGarrafa(marca: "Owala", nome: "FreeSip 710 ml (24 oz)", ml: 710, icone: "termica"),
+        ModeloGarrafa(marca: "Owala", nome: "FreeSip 946 ml (32 oz)", ml: 946, icone: "termica"),
+        ModeloGarrafa(marca: "Owala", nome: "FreeSip 1,18 L (40 oz)", ml: 1180, icone: "termica"),
+        ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 946 ml (32 oz)", ml: 946, icone: "termica"),
+        ModeloGarrafa(marca: "Hydro Flask", nome: "Standard 621 ml (21 oz)", ml: 621, icone: "termica"),
+        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 500 ml", ml: 500, icone: "termica"),
+        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 750 ml", ml: 750, icone: "termica"),
+        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 1 L", ml: 1000, icone: "termica"),
+        ModeloGarrafa(marca: "Comum", nome: "Copo americano 190 ml", ml: 190, icone: "copoPequeno"),
+        ModeloGarrafa(marca: "Comum", nome: "Copo 300 ml", ml: 300, icone: "copo"),
+        ModeloGarrafa(marca: "Comum", nome: "Xícara/caneca 240 ml", ml: 240, icone: "caneca"),
+        ModeloGarrafa(marca: "Comum", nome: "Garrafinha 500 ml", ml: 500, icone: "garrafa"),
+        ModeloGarrafa(marca: "Comum", nome: "Garrafa 1,5 L", ml: 1500, icone: "garrafa"),
+    ]
+
+    static let icones: [(id: String, nome: String)] = [
+        ("copoPequeno", "Copo pequeno"), ("copo", "Copo"), ("caneca", "Caneca"),
+        ("garrafa", "Garrafa"), ("termica", "Garrafa térmica"), ("copao", "Copão com alça"),
+    ]
 }
 
 // MARK: - Estado e histórico
@@ -178,6 +219,8 @@ struct Estado: Codable {
     var conquistas: [String: Date] = [:]
     var ultimaVerificacao: Date? = nil
     var ultimaVersaoVista = ""
+    var versaoAvisada = ""
+    var onboardingConcluido = false
 }
 
 struct Registro: Codable, Identifiable {
@@ -262,10 +305,6 @@ final class Store: ObservableObject {
         var h = JSON.carregar(Caminhos.historico, padrao: Historico())
 
         if primeiraVez { e.instaladoEm = Date(); e.foraDoHorario = true }
-        if p.fonteAtualizacao.isEmpty,
-           let f = try? String(contentsOf: Caminhos.fonte, encoding: .utf8) {
-            p.fonteAtualizacao = f.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
         if r.dias.isEmpty { r.dias = [2, 3, 4, 5, 6] }
         if p.copos.isEmpty { p.copos = Preferencias().copos }
 
@@ -283,6 +322,14 @@ final class Store: ObservableObject {
         JSON.gravar(p, em: Caminhos.prefs)
         JSON.gravar(e, em: Caminhos.estado)
         JSON.gravar(h, em: Caminhos.historico)
+    }
+
+    /// Relê tudo do disco (usado quando outra instância do app acabou de salvar).
+    func recarregar() {
+        regras = JSON.carregar(Caminhos.regras, padrao: Regras())
+        prefs = JSON.carregar(Caminhos.prefs, padrao: Preferencias())
+        estado = JSON.carregar(Caminhos.estado, padrao: Estado())
+        historico = JSON.carregar(Caminhos.historico, padrao: Historico())
     }
 
     // MARK: Regras e agenda

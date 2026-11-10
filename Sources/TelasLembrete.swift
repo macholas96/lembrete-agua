@@ -233,6 +233,11 @@ struct TelaQuanto: View {
             }
             .padding(.vertical, 18)
 
+            if fluxo.copoSel < copos.count && copos[fluxo.copoSel].ml >= 500 {
+                SeletorFracao(fluxo: fluxo, total: copos[fluxo.copoSel].ml)
+                    .padding(.bottom, 14)
+            }
+
             HStack(spacing: 16) {
                 Button { fluxo.ml = max(50, fluxo.ml - 50) } label: {
                     Image(systemName: "minus").font(.system(size: 15, weight: .bold)).frame(width: 36, height: 36)
@@ -256,6 +261,32 @@ struct TelaQuanto: View {
             Button("Voltar") { fluxo.tela = .lembrete }
                 .buttonStyle(BotaoSecundario())
                 .padding(.top, 8)
+        }
+    }
+}
+
+/// Para garrafas grandes: quanto da garrafa você bebeu agora.
+private struct SeletorFracao: View {
+    @ObservedObject var fluxo: Fluxo
+    let total: Int
+    static let opcoes: [(rotulo: String, f: Double)] = [("¼", 0.25), ("½", 0.5), ("¾", 0.75), ("Inteira", 1)]
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Quanto da garrafa?").font(.system(size: 13, weight: .medium)).foregroundColor(Estilo.tinta2)
+            ForEach(0..<SeletorFracao.opcoes.count, id: \.self) { i in
+                let op = SeletorFracao.opcoes[i]
+                let valor = Int((Double(total) * op.f / 10).rounded()) * 10
+                let sel = fluxo.ml == valor
+                Button { fluxo.ml = valor } label: {
+                    Text(op.rotulo)
+                        .font(.system(size: 13, weight: .bold))
+                        .padding(.vertical, 6).padding(.horizontal, 12)
+                        .foregroundColor(sel ? .white : Estilo.tinta)
+                        .background(Capsule().fill(sel ? Estilo.azul : Estilo.tinta.opacity(0.07)))
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }

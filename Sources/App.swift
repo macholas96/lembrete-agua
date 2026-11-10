@@ -13,18 +13,23 @@ final class Controlador: NSObject, NSApplicationDelegate {
     let verificador = Verificador()
     let fluxo = Fluxo()
     let atualizador = Atualizador()
+    let permissoes = Permissoes()
     let bolha = Bolha()
+    let boasVindas = JanelaBoasVindas()
     lazy var widget = WidgetMesa(store: store)
     lazy var barra = BarraMenu(store: store)
-    lazy var ajustes = JanelaAjustes(store: store, atualizador: atualizador)
+    lazy var ajustes = JanelaAjustes(store: store, atualizador: atualizador, permissoes: permissoes)
 
     var janelas: [JanelaOverlay] = []
     var janelaPrincipal: JanelaOverlay?
     var mostrando = false
+    var iniciado = false
     var timerImpor: Timer?
+    var timerEspera: Timer?
     var pausadoAte: Date?
     var preAvisoPara: Date?
     var adiadoDesde: Date?
+    var reabrirAjustes = false
 
     override init() { super.init() }
 
@@ -37,17 +42,39 @@ final class Controlador: NSObject, NSApplicationDelegate {
     // MARK: Início
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let id = Bundle.main.bundleIdentifier ?? "com.lembrete.agua"
-        if NSRunningApplication.runningApplications(withBundleIdentifier: id).contains(where: { $0 != NSRunningApplication.current }) {
-            exit(0)
-        }
         NSApp.setActivationPolicy(.accessory)
+        if outraInstanciaRodando() {
+            if ModoInicio.ehAgente {
+                // Aberto pelo macOS enquanto a pessoa ainda usa o app aberto à mão: espera ele fechar e assume.
+                timerEspera = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(esperarVez), userInfo: nil, repeats: true)
+            } else {
+                // Aberto pela pessoa (ex.: clicou no ícone): pede para a instância que já roda mostrar os Ajustes.
+                DistributedNotificationCenter.default().postNotificationName(ModoInicio.avisoAbrir, object: nil, userInfo: nil, deliverImmediately: true)
+                exit(0)
+            }
+            return
+        }
+        iniciar()
+    }
+
+    func outraInstanciaRodando() -> Bool {
+        let id = Bundle.main.bundleIdentifier ?? "com.lembrete.agua"
+        return NSRunningApplication.runningApplications(withBundleIdentifier: id).contains { $0 != NSRunningApplication.current }
+    }
+
+    @objc func esperarVez() {
+        guard !outraInstanciaRodando() else { return }
+        timerEspera?.invalidate()
+        timerEspera = nil
+        store.recarregar()
+        iniciar()
+    }
+
+    func iniciar() {
+        guard !iniciado else { return }
+        iniciado = true
         configurarMenuPrincipal()
         fluxo.sessao = verificador.sessao
-
-        if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
-            AVCaptureDevice.requestAccess(for: .video) { _ in }
-        }
 
         verificador.aoAtualizar = { [weak self] s in self?.fluxo.status = s }
         verificador.aoConcluir = { [weak self] in self?.concluiu() }
@@ -60,12 +87,20 @@ final class Controlador: NSObject, NSApplicationDelegate {
 
         atualizador.store = store
         atualizador.podeInstalar = { [weak self] in !(self?.mostrando ?? true) }
+        atualizador.aoEncontrar = { [weak self] info in self?.versaoNova(info) }
 
         barra.aoBeber = { [weak self] in self?.mostrarOverlay(voluntario: true) }
         barra.aoAjustes = { [weak self] aba in self?.ajustes.abrir(aba: aba) }
-        ajustes.aoTestar = { [weak self] in
-            self?.ajustes.fechar()
-            self?.mostrarOverlay(voluntario: true)
+        barra.versaoDisponivel = { [weak self] in self?.atualizador.disponivel?.versao }
+
+        ajustes.acoes.testarAgora = { [weak self] in self?.testarPelosAjustes() }
+        ajustes.acoes.testarPreAviso = { [weak self] in
+            self?.bolha.mostrar("Água em 1 min — já pega o copo! (teste)", segundos: 6)
+        }
+        ajustes.acoes.mostrarWidget = { [weak self] in
+            self?.widget.atualizar()
+            NSApp.hide(nil)
+            self?.bolha.mostrar("Olhe o widget na área de trabalho. Clique na gotinha 💧 para voltar aos Ajustes.", icone: "rectangle.on.rectangle", segundos: 6)
         }
 
         store.aoMudarPrefs = { [weak self] in
@@ -73,6 +108,8 @@ final class Controlador: NSObject, NSApplicationDelegate {
             self?.barra.atualizar()
         }
 
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(pedidoParaAbrir),
+                                                            name: ModoInicio.avisoAbrir, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(telasMudaram),
                                                name: NSApplication.didChangeScreenParametersNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(checar),
@@ -83,14 +120,24 @@ final class Controlador: NSObject, NSApplicationDelegate {
 
         widget.atualizar()
         barra.atualizar()
+        permissoes.atualizar()
 
-        if store.primeiraVez {
-            ajustes.abrir(aba: "lembretes")
-            bolha.mostrar("Bem-vindo! Configure do seu jeito — hoje tudo vale na hora.", segundos: 8)
-        } else if store.puloNoBoot {
-            bolha.mostrar("Você desligou o Mac com a água pendente. Fica registrado no histórico 👀", icone: "power", segundos: 8)
-        } else if store.estado.ultimaVersaoVista != atualizador.versaoAtual && !store.estado.ultimaVersaoVista.isEmpty {
-            bolha.mostrar("Atualizado para a versão \(atualizador.versaoAtual)! Veja as novidades nos Ajustes.", icone: "sparkles", segundos: 8)
+        if !store.estado.onboardingConcluido {
+            abrirBoasVindas()
+        } else {
+            if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
+                AVCaptureDevice.requestAccess(for: .video) { _ in }   // ex.: logo depois de uma atualização
+            }
+            if store.puloNoBoot {
+                bolha.mostrar("Você desligou o Mac com a água pendente. Fica registrado no histórico 👀", icone: "power", segundos: 8)
+            } else if store.estado.ultimaVersaoVista != atualizador.versaoAtual && !store.estado.ultimaVersaoVista.isEmpty {
+                bolha.mostrar("Atualizado para a versão \(atualizador.versaoAtual)! Veja as novidades nos Ajustes.", icone: "sparkles", segundos: 8)
+            } else if !permissoes.tudoOk {
+                bolha.mostrar("Falta uma permissão para o LembreteAgua funcionar direito.", icone: "lock.shield", segundos: 8)
+                ajustes.abrir(aba: "permissoes")
+            } else if !ModoInicio.ehAgente {
+                ajustes.abrir(aba: "geral")   // a pessoa abriu o app pelo ícone: mostra os Ajustes
+            }
         }
         if store.estado.ultimaVersaoVista != atualizador.versaoAtual {
             store.estado.ultimaVersaoVista = atualizador.versaoAtual
@@ -98,9 +145,49 @@ final class Controlador: NSObject, NSApplicationDelegate {
 
         checar()
         Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 90_000_000_000)
+            try? await Task.sleep(nanoseconds: 60_000_000_000)
             self?.procurarAtualizacao()
         }
+    }
+
+    func abrirBoasVindas() {
+        boasVindas.abrir(store: store, permissoes: permissoes) { [weak self] in self?.concluirBoasVindas() }
+    }
+
+    func concluirBoasVindas() {
+        store.estado.onboardingConcluido = true
+        store.estado.foraDoHorario = true   // o primeiro lembrete vem só depois de um intervalo
+        boasVindas.fechar()
+        permissoes.atualizar()
+        if !ModoInicio.ehAgente && permissoes.agente == .enabled {
+            // O agente de segundo plano assume daqui para frente; esta cópia (aberta à mão) pode fechar.
+            bolha.mostrar("Tudo pronto! O LembreteAgua fica na barra de menus 💧", segundos: 3)
+            Task {
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                exit(0)
+            }
+        } else {
+            bolha.mostrar("Tudo pronto! Procure a gotinha 💧 na barra de menus.", segundos: 6)
+        }
+    }
+
+    @objc func pedidoParaAbrir() {
+        if !store.estado.onboardingConcluido { abrirBoasVindas() }
+        else if !mostrando { ajustes.abrir(aba: permissoes.tudoOk ? "geral" : "permissoes") }
+    }
+
+    func versaoNova(_ info: InfoVersao) {
+        barra.atualizar()
+        if store.estado.versaoAvisada != info.versao {
+            store.estado.versaoAvisada = info.versao
+            bolha.mostrar("Nova versão \(info.versao) disponível! Clique na gotinha 💧 → Atualizar.", icone: "arrow.down.circle.fill", segundos: 10)
+        }
+    }
+
+    func testarPelosAjustes() {
+        reabrirAjustes = true
+        ajustes.esconderTemporariamente()
+        mostrarOverlay(voluntario: true)
     }
 
     func configurarMenuPrincipal() {
@@ -131,11 +218,12 @@ final class Controlador: NSObject, NSApplicationDelegate {
     }
 
     @objc func procurarAtualizacao() {
-        guard store.prefs.autoAtualizar, !mostrando else { return }
+        guard store.prefs.verificarAtualizacoes, !mostrando else { return }
         atualizador.verificar(manual: false)
     }
 
     @objc func checar() {
+        guard iniciado, store.estado.onboardingConcluido else { return }
         store.aplicarPendentes()
         if FileManager.default.fileExists(atPath: Caminhos.testar.path) {
             try? FileManager.default.removeItem(at: Caminhos.testar)
@@ -160,23 +248,25 @@ final class Controlador: NSObject, NSApplicationDelegate {
             store.estado.proximo = agora.addingTimeInterval(intervalo)
         }
         let falta = store.estado.proximo.timeIntervalSince(agora)
+        let emChamada = store.regras.adiarEmChamadas && Chamada.emChamada(usarMicrofone: store.regras.usarMicrofone)
 
-        if store.prefs.preAviso, falta > 0, falta <= Double(store.prefs.preAvisoSeg), preAvisoPara != store.estado.proximo {
+        if store.prefs.preAviso, !emChamada, falta > 0, falta <= Double(store.prefs.preAvisoSeg), preAvisoPara != store.estado.proximo {
             preAvisoPara = store.estado.proximo
             let quando = falta >= 90 ? "\(Int((falta / 60).rounded())) min" : "\(Int(falta.rounded())) s"
             bolha.mostrar("Água em \(quando) — já pega o copo!", segundos: min(falta, 10))
         }
         guard falta <= 0 else { return }
 
-        if store.regras.adiarEmChamadas && cameraEmUsoPorOutroApp() {
-            if adiadoDesde == nil {
-                adiadoDesde = agora
-                bolha.mostrar("Você está numa chamada — a água espera ela acabar (até \(store.regras.adiarMaxMin) min).",
-                              icone: "video.fill", segundos: 8)
-            }
-            if let d = adiadoDesde, agora.timeIntervalSince(d) < Double(store.regras.adiarMaxMin * 60) { return }
+        if emChamada {
+            if adiadoDesde == nil { adiadoDesde = agora }   // em silêncio: nada aparece durante a chamada
+            let limite = store.regras.adiarMaxMin
+            if limite == 0 { return }
+            if let d = adiadoDesde, agora.timeIntervalSince(d) < Double(limite * 60) { return }
         }
-        adiadoDesde = nil
+        if adiadoDesde != nil {
+            adiadoDesde = nil
+            preAvisoPara = nil
+        }
         mostrarOverlay(voluntario: false)
     }
 
@@ -189,7 +279,7 @@ final class Controlador: NSObject, NSApplicationDelegate {
         ajustes.fechar()
         fluxo.preparar(voluntario: voluntario, store: store)
         construirJanelas()
-        if store.prefs.somAtivo && !voluntario { Sons.tocar(store.prefs.som, volume: store.prefs.volume) }
+        if store.prefs.somAtivo { Sons.tocar(store.prefs.som, volume: store.prefs.volume) }
         NSApp.activate(ignoringOtherApps: true)
         impor()
         timerImpor = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(impor), userInfo: nil, repeats: true)
@@ -230,7 +320,12 @@ final class Controlador: NSObject, NSApplicationDelegate {
         janelaPrincipal = nil
         widget.atualizar()
         barra.atualizar()
-        NSApp.hide(nil)
+        if reabrirAjustes {
+            reabrirAjustes = false
+            ajustes.reexibir()
+        } else {
+            NSApp.hide(nil)
+        }
     }
 
     @objc func telasMudaram() {

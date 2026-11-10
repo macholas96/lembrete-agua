@@ -96,6 +96,24 @@ struct FormaRecipiente: Shape {
             p.addQuadCurve(to: CGPoint(x: 37, y: 55), control: CGPoint(x: 40, y: 55))
             p.addLine(to: CGPoint(x: 23, y: 55)); p.addQuadCurve(to: CGPoint(x: 20, y: 52), control: CGPoint(x: 20, y: 55))
             p.closeSubpath()
+        case ("copao", false):
+            p.addRoundedRect(in: CGRect(x: 12, y: 9, width: 34, height: 5), cornerSize: CGSize(width: 2, height: 2))
+            p.move(to: CGPoint(x: 14, y: 14)); p.addLine(to: CGPoint(x: 44, y: 14))
+            p.addLine(to: CGPoint(x: 40, y: 57)); p.addLine(to: CGPoint(x: 18, y: 57)); p.closeSubpath()
+            p.move(to: CGPoint(x: 33, y: 9)); p.addLine(to: CGPoint(x: 38, y: 1))
+            p.move(to: CGPoint(x: 43.5, y: 20)); p.addLine(to: CGPoint(x: 50, y: 20))
+            p.addCurve(to: CGPoint(x: 55, y: 27), control1: CGPoint(x: 53, y: 20), control2: CGPoint(x: 55, y: 23))
+            p.addLine(to: CGPoint(x: 55, y: 39))
+            p.addCurve(to: CGPoint(x: 49, y: 46), control1: CGPoint(x: 55, y: 43), control2: CGPoint(x: 53, y: 46))
+            p.addLine(to: CGPoint(x: 41.5, y: 46))
+        case ("copao", true):
+            p.move(to: CGPoint(x: 16.5, y: 24)); p.addLine(to: CGPoint(x: 41.5, y: 24))
+            p.addLine(to: CGPoint(x: 38.6, y: 54.5)); p.addLine(to: CGPoint(x: 19.4, y: 54.5)); p.closeSubpath()
+        case ("termica", false):
+            p.addRoundedRect(in: CGRect(x: 22, y: 2, width: 16, height: 8), cornerSize: CGSize(width: 3, height: 3))
+            p.addRoundedRect(in: CGRect(x: 18, y: 10, width: 24, height: 48), cornerSize: CGSize(width: 7, height: 7))
+        case ("termica", true):
+            p.addRoundedRect(in: CGRect(x: 21, y: 26, width: 18, height: 29), cornerSize: CGSize(width: 5, height: 5))
         case (_, false):  // copo
             p.move(to: CGPoint(x: 10, y: 4)); p.addLine(to: CGPoint(x: 50, y: 4))
             p.addLine(to: CGPoint(x: 45, y: 57)); p.addLine(to: CGPoint(x: 15, y: 57)); p.closeSubpath()

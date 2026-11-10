@@ -1,0 +1,52 @@
+name: Compilar e publicar
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versão do compilador
+        run: xcrun swiftc --version
+
+      - name: Conferir que a tag bate com o arquivo VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "v$(tr -d '[:space:]' < VERSION)" = "$GITHUB_REF_NAME"
+
+      - name: Compilar (Apple Silicon + Intel)
+        env:
+          UNIVERSAL: "1"
+          REPO: ${{ github.repository }}
+        run: bash build.sh "$PWD/dist/LembreteAgua.app"
+
+      - name: Empacotar zip (usado pelo botão Atualizar)
+        run: ditto -c -k --keepParent dist/LembreteAgua.app dist/LembreteAgua.zip
+
+      - name: Criar DMG (instalação: arrastar para Aplicativos)
+        run: bash scripts/criar-dmg.sh dist/LembreteAgua.app dist/LembreteAgua.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LembreteAgua
+          path: |
+            dist/LembreteAgua.dmg
+            dist/LembreteAgua.zip
+
+      - name: Publicar release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk 'NR==1{next} /^Versão /{exit} {print}' NOVIDADES.md > notas.md
+          gh release create "$GITHUB_REF_NAME" dist/LembreteAgua.dmg dist/LembreteAgua.zip \
+            --title "LembreteAgua ${GITHUB_REF_NAME#v}" --notes-file notas.md

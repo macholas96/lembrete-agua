@@ -227,6 +227,7 @@ final class BarraMenu: NSObject, NSMenuDelegate {
     private let store: Store
     var aoBeber: @MainActor () -> Void = {}
     var aoAjustes: @MainActor (String) -> Void = { _ in }
+    var versaoDisponivel: @MainActor () -> String? = { nil }
 
     init(store: Store) {
         self.store = store
@@ -243,15 +244,23 @@ final class BarraMenu: NSObject, NSMenuDelegate {
         img?.isTemplate = true
         b.image = img
         b.imagePosition = .imageLeading
+        var titulo: String
         switch store.prefs.barraMenu {
-        case "pct": b.title = " \(Int(Double(store.hojeML) / Double(max(1, store.regras.metaML)) * 100))%"
-        case "icone": b.title = ""
-        default: b.title = " " + store.fmtCurto(store.hojeML)
+        case "pct": titulo = " \(Int(Double(store.hojeML) / Double(max(1, store.regras.metaML)) * 100))%"
+        case "icone": titulo = ""
+        default: titulo = " " + store.fmtCurto(store.hojeML)
         }
+        if versaoDisponivel() != nil { titulo += " •" }
+        b.title = titulo
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        if let v = versaoDisponivel() {
+            let up = acao("⬆️ Atualizar para a versão \(v)…", #selector(abrirAtualizacao), "")
+            menu.addItem(up)
+            menu.addItem(.separator())
+        }
         let hoje = store.hojeML, meta = store.regras.metaML
         let cab = NSMenuItem(title: "\(store.fmt(hoje, unidade: false)) de \(store.fmt(meta))  ·  🔥 \(store.sequenciaAtual()) dias", action: nil, keyEquivalent: "")
         cab.isEnabled = false
@@ -285,5 +294,6 @@ final class BarraMenu: NSObject, NSMenuDelegate {
 
     @objc private func beber() { aoBeber() }
     @objc private func historico() { aoAjustes("historico") }
-    @objc private func ajustes() { aoAjustes("lembretes") }
+    @objc private func ajustes() { aoAjustes("geral") }
+    @objc private func abrirAtualizacao() { aoAjustes("atualizacoes") }
 }
