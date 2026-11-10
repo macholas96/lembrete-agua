@@ -32,7 +32,7 @@ jobs:
       - name: Empacotar zip (usado pelo botão Atualizar)
         run: ditto -c -k --keepParent dist/LembreteAgua.app dist/LembreteAgua.zip
 
-      - name: Criar DMG (instalação: arrastar para Aplicativos)
+      - name: "Criar DMG (instalação: arrastar para Aplicativos)"
         run: bash scripts/criar-dmg.sh dist/LembreteAgua.app dist/LembreteAgua.dmg
 
       - uses: actions/upload-artifact@v4
