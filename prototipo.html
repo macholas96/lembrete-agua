@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LembreteAgua — protótipo</title>
+<style>
+:root{
+  --agua-1:#5ec8ff; --agua-2:#2f8ff0; --agua-3:#1665c9;
+  --tinta:#0f2236; --tinta-2:#4a5d73; --tinta-3:#8496aa;
+  --ok:#22c55e; --fogo:#ff7a1a;
+  --cartao:rgba(255,255,255,.86);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b1220}
+body{font-family:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased}
+
+/* ---------- Mesa (desktop falso) ---------- */
+.mesa{position:fixed;inset:0;
+  background:
+    radial-gradient(1200px 700px at 15% 110%, #f6b58f 0%, transparent 55%),
+    radial-gradient(900px 600px at 95% 0%, #7a6cf0 0%, transparent 60%),
+    linear-gradient(160deg,#3b3f9e 0%,#6a5bd6 35%,#d98fb8 70%,#f2b48a 100%);}
+.menubar{position:absolute;top:0;left:0;right:0;height:28px;display:flex;align-items:center;gap:22px;padding:0 14px;
+  background:rgba(255,255,255,.28);backdrop-filter:blur(20px);color:#1b1b1f;font-size:13px;font-weight:500}
+.menubar .dir{margin-left:auto;display:flex;gap:16px;align-items:center}
+.mb-agua{display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:5px;font-weight:600}
+.mb-agua.aberto{background:rgba(0,0,0,.12)}
+.janela-fundo{position:absolute;left:120px;top:90px;width:860px;height:560px;border-radius:12px;background:#fbfbfd;
+  box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}
+.janela-fundo .barra{height:38px;background:#ececf0;display:flex;align-items:center;gap:8px;padding:0 14px}
+.semaforo{width:12px;height:12px;border-radius:50%}
+.janela-fundo .conteudo{padding:28px 36px;color:#333;font-size:14px;line-height:1.7}
+.janela-fundo h3{font-size:22px;margin-bottom:12px;color:#111}
+.linha-falsa{height:10px;border-radius:5px;background:#e6e8ee;margin:12px 0}
+
+/* ---------- Widget de mesa ---------- */
+.widget{position:absolute;right:28px;bottom:28px;width:330px;padding:18px;border-radius:24px;color:#fff;
+  background:rgba(20,40,70,.42);backdrop-filter:blur(28px) saturate(1.4);border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 18px 50px rgba(0,0,0,.25);display:grid;grid-template-columns:86px 1fr;gap:16px}
+.widget .rot{font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.7;font-weight:600}
+.widget .ml{font-size:30px;font-weight:700;line-height:1.1;margin-top:2px}
+.widget .ml small{font-size:14px;font-weight:500;opacity:.75}
+.widget .chips{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.16)}
+.semana{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;height:52px;padding-top:4px;border-top:1px solid rgba(255,255,255,.14)}
+.semana div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;opacity:.85;width:30px}
+.semana i{display:block;width:14px;border-radius:5px;background:linear-gradient(#8fdcff,#3aa0ff)}
+.semana i.meta{background:linear-gradient(#a7f3c4,#22c55e)}
+.semana i.hoje{outline:2px solid #fff;outline-offset:1px}
+
+/* ---------- Dropdown da barra de menus ---------- */
+.dropdown{position:absolute;top:32px;right:150px;width:300px;padding:14px;border-radius:14px;background:rgba(246,247,250,.92);
+  backdrop-filter:blur(30px);box-shadow:0 20px 50px rgba(0,0,0,.3);border:1px solid rgba(0,0,0,.06);font-size:13px}
+.dropdown .topo{display:flex;align-items:center;gap:12px;padding:4px 4px 12px}
+.dropdown .item{padding:7px 8px;border-radius:7px;display:flex;justify-content:space-between}
+.dropdown .item:hover,.dropdown .item.ativo{background:#2f8ff0;color:#fff}
+.dropdown hr{border:0;border-top:1px solid rgba(0,0,0,.08);margin:6px 0}
+.tecla{opacity:.5}
+
+/* ---------- Overlay azul ---------- */
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,rgba(94,200,255,.58) 0%,rgba(47,143,240,.66) 55%,rgba(22,101,201,.78) 100%);
+  backdrop-filter:blur(3px)}
+.ondas{position:absolute;left:0;right:0;bottom:0;height:200px;overflow:hidden;pointer-events:none}
+.ondas svg{position:absolute;bottom:0;width:200%;height:100%}
+.ondas .o1{animation:mar 14s linear infinite;opacity:.35}
+.ondas .o2{animation:mar 9s linear infinite reverse;opacity:.25;bottom:-20px}
+@keyframes mar{to{transform:translateX(-50%)}}
+.bolhas span{position:absolute;bottom:-20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);animation:sobe linear infinite}
+@keyframes sobe{to{transform:translateY(-110vh)}}
+
+.cartao{position:relative;width:580px;padding:36px 40px 30px;border-radius:30px;background:var(--cartao);
+  backdrop-filter:blur(40px) saturate(1.6);box-shadow:0 40px 100px rgba(10,50,110,.35),inset 0 1px 0 rgba(255,255,255,.8);
+  text-align:center}
+.cartao h1{font-size:32px;letter-spacing:-.02em;font-weight:800;margin-top:6px}
+.cartao .sub{color:var(--tinta-2);font-size:15px;margin-top:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:16px;
+  padding:14px 26px;border-radius:14px;color:#fff;background:linear-gradient(180deg,#45a8ff,#1f7ae6);
+  box-shadow:0 8px 20px rgba(31,122,230,.35),inset 0 1px 0 rgba(255,255,255,.35);min-width:260px}
+.btn.sec{background:rgba(15,34,54,.06);color:var(--tinta);box-shadow:none;min-width:0;font-weight:600}
+.rodape{font-size:12.5px;color:var(--tinta-3);margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px}
+
+.resumo{display:flex;align-items:center;gap:22px;justify-content:center;margin:22px 0 24px}
+.anel{position:relative;width:132px;height:132px}
+.anel .centro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.anel .centro b{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.anel .centro span{font-size:12px;color:var(--tinta-2)}
+.stats{display:flex;flex-direction:column;gap:10px;text-align:left}
+.stat{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--tinta-2)}
+.stat b{color:var(--tinta);font-size:15px}
+.stat .ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* escolha de quantidade */
+.recipientes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 16px}
+.rec{border-radius:18px;padding:16px 6px 12px;background:rgba(15,34,54,.04);border:2px solid transparent;cursor:pointer}
+.rec.sel{border-color:#2f8ff0;background:rgba(47,143,240,.10)}
+.rec svg{height:58px}
+.rec b{display:block;font-size:17px;margin-top:6px}
+.rec span{font-size:12px;color:var(--tinta-2)}
+.ajuste{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:22px;color:var(--tinta-2);font-size:14px}
+.passo{width:36px;height:36px;border-radius:50%;border:0;background:rgba(15,34,54,.07);font-size:20px;font-weight:600;color:var(--tinta)}
+.ajuste b{font-size:20px;color:var(--tinta);min-width:90px}
+
+/* câmera */
+.video{position:relative;width:500px;height:320px;margin:18px auto 14px;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#4a5868,#1c2430 75%)}
+.caixa{position:absolute;border:2.5px solid;border-radius:12px}
+.caixa em{position:absolute;top:-24px;left:-2px;font-style:normal;font-size:11.5px;font-weight:700;color:#fff;padding:3px 8px;border-radius:7px}
+.ao-vivo{position:absolute;top:12px;left:12px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:999px;display:flex;align-items:center;gap:6px}
+.ao-vivo i{width:7px;height:7px;border-radius:50%;background:#ff4d4d}
+.checks{display:flex;gap:10px;justify-content:center;margin-bottom:12px}
+.check{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:rgba(15,34,54,.06);color:var(--tinta-2)}
+.check.ok{background:rgba(34,197,94,.14);color:#15803d}
+.check.vez{background:rgba(47,143,240,.14);color:#1665c9}
+.barra-prog{height:10px;border-radius:5px;background:rgba(15,34,54,.08);overflow:hidden;margin:0 10px}
+.barra-prog i{display:block;height:100%;width:62%;border-radius:5px;background:linear-gradient(90deg,#5ec8ff,#1f7ae6)}
+.instr{font-size:17px;font-weight:700;margin:14px 0 2px}
+
+/* sucesso */
+.mais{font-size:56px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(180deg,#45a8ff,#1665c9);-webkit-background-clip:text;color:transparent;line-height:1}
+.conquista{display:flex;align-items:center;gap:14px;text-align:left;margin:20px auto 6px;padding:12px 16px;border-radius:16px;
+  background:linear-gradient(90deg,rgba(255,170,60,.18),rgba(255,122,26,.08));border:1px solid rgba(255,122,26,.25);width:fit-content}
+.conquista .med{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#ffd27a,#ff9a2e);box-shadow:0 4px 10px rgba(255,140,30,.4)}
+.conquista b{display:block;font-size:14px}
+.conquista span{font-size:12.5px;color:var(--tinta-2)}
+
+/* ajustes */
+.ajustes{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:640px;border-radius:14px;background:#f5f6f8;
+  box-shadow:0 40px 100px rgba(0,0,0,.4);overflow:hidden;font-size:13.5px}
+.ajustes .barra{height:44px;display:flex;align-items:center;gap:8px;padding:0 16px;background:#eceef2;border-bottom:1px solid #dfe2e7}
+.ajustes .barra .tit{position:absolute;left:0;right:0;text-align:center;font-weight:700;pointer-events:none}
+.ajustes .corpo{padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px}
+.grupo{background:#fff;border-radius:12px;border:1px solid #e3e6ea}
+.grupo .lin{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #eef0f3}
+.grupo .lin:last-child{border-bottom:0}
+.grupo .lin .desc{color:var(--tinta-3);font-size:12px;margin-top:2px}
+.grupo-tit{font-size:11.5px;font-weight:700;color:var(--tinta-3);text-transform:uppercase;letter-spacing:.06em;margin:0 0 -6px 4px}
+.pop{padding:4px 10px;border-radius:7px;background:#f1f3f6;border:1px solid #dfe3e8;font-weight:600}
+.seg{display:flex;background:#eef0f3;border-radius:8px;padding:2px}
+.seg span{padding:4px 10px;border-radius:6px;font-weight:600;color:var(--tinta-2)}
+.seg span.on{background:#fff;color:var(--tinta);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.dias{display:flex;gap:6px}
+.dias span{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;background:#eef0f3;color:var(--tinta-3)}
+.dias span.on{background:#2f8ff0;color:#fff}
+.switch{width:38px;height:22px;border-radius:11px;background:#34c759;position:relative}
+.switch::after{content:"";position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.slider{width:200px;height:4px;border-radius:2px;background:linear-gradient(90deg,#2f8ff0 55%,#dfe3e8 55%);position:relative}
+.slider::after{content:"";position:absolute;left:55%;top:-8px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.aviso{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#eaf4ff;color:#1b4f8a;font-size:12.5px;line-height:1.5}
+
+/* navegação do protótipo */
+.nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;border-radius:14px;background:rgba(10,20,35,.75);backdrop-filter:blur(10px);z-index:99}
+.nav button{border:0;font:inherit;font-size:12.5px;font-weight:600;color:#cfe3ff;background:transparent;padding:7px 11px;border-radius:9px;cursor:pointer}
+.nav button.on{background:#2f8ff0;color:#fff}
+.shot .nav{display:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gGota" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd6ff"/><stop offset="1" stop-color="#1f7ae6"/></linearGradient>
+    <linearGradient id="gAgua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fdcff"/><stop offset="1" stop-color="#2f8ff0"/></linearGradient>
+    <symbol id="gota" viewBox="0 0 64 80"><path d="M32 3C32 3 6 34 6 52a26 26 0 0 0 52 0C58 34 32 3 32 3z" fill="url(#gGota)"/><path d="M20 52a12 12 0 0 0 12 12" stroke="#fff" stroke-opacity=".7" stroke-width="5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="copoP" viewBox="0 0 40 60"><path d="M8 18h24l-3 36H11z" fill="url(#gAgua)"/><path d="M5 6h30l-4 50H9z" fill="none" stroke="#1665c9" stroke-width="2.5" stroke-linejoin="round"/></symbol>
+    <symbol id="copo" viewBox="0 0 44 60"><path d="M8 14h28l-4 42H12z" fill="url(#gAgua)"/><path d="M4 3h36l-5 54H9z" fill="none" stroke="#1665c9" stroke-width="2.5" stroke-linejoin="round"/></symbol>
+    <symbol id="caneca" viewBox="0 0 60 60"><rect x="8" y="16" width="32" height="38" rx="5" fill="url(#gAgua)"/><path d="M6 6h36v44a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6z" fill="none" stroke="#1665c9" stroke-width="2.5"/><path d="M42 18h6a8 8 0 0 1 0 16h-6" fill="none" stroke="#1665c9" stroke-width="2.5"/></symbol>
+    <symbol id="garrafa" viewBox="0 0 34 64"><path d="M6 26h22v30a5 5 0 0 1-5 5H11a5 5 0 0 1-5-5z" fill="url(#gAgua)"/><path d="M12 2h10v8l6 8v38a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6V18l6-8z" fill="none" stroke="#1665c9" stroke-width="2.5" stroke-linejoin="round"/></symbol>
+    <symbol id="cadeado" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="8" rx="2" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.8" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="mesa">
+  <div class="menubar">
+    <svg width="13" height="15" viewBox="0 0 170 200"><path fill="#1b1b1f" d="M150 155c-8 18-12 26-22 42-14 22-34 49-59 49s-31-15-60-15-36 15-60 15-44-25-58-47C-29 160-23 90 11 52c18-20 41-32 62-32 23 0 37 15 56 15 18 0 29-15 56-15 19 0 39 10 53 28-47 26-39 93 12 107zM116 0c3 20-5 40-16 54-12 14-31 25-49 24-3-20 6-40 17-53 12-14 32-24 48-25z" transform="translate(30 -10) scale(.8)"/></svg><b>Notas</b><span>Arquivo</span><span>Editar</span><span>Formatar</span><span>Visualizar</span><span>Janela</span>
+    <div class="dir">
+      <span class="mb-agua" id="mbAgua"><svg width="12" height="15"><use href="#gota"/></svg>1,5 L</span>
+      <span>Ter. 10 de nov.  15:01</span>
+    </div>
+  </div>
+  <div class="janela-fundo">
+    <div class="barra"><i class="semaforo" style="background:#ff5f57"></i><i class="semaforo" style="background:#febc2e"></i><i class="semaforo" style="background:#28c840"></i></div>
+    <div class="conteudo">
+      <h3>Planejamento da semana</h3>
+      <p>Revisar as artes de quinta, fechar o calendário de posts e alinhar com o time os horários de publicação.</p>
+      <div class="linha-falsa" style="width:92%"></div><div class="linha-falsa" style="width:76%"></div><div class="linha-falsa" style="width:84%"></div>
+      <div class="linha-falsa" style="width:60%"></div><div class="linha-falsa" style="width:88%"></div><div class="linha-falsa" style="width:70%"></div>
+    </div>
+  </div>
+
+  <!-- Widget de mesa -->
+  <div class="widget" id="widget">
+    <svg viewBox="0 0 86 140" width="86" height="140">
+      <defs><clipPath id="cpGarrafa"><path d="M30 4h26v16l12 16v92a8 8 0 0 1-8 8H26a8 8 0 0 1-8-8V36l12-16z"/></clipPath></defs>
+      <g clip-path="url(#cpGarrafa)">
+        <rect x="0" y="0" width="86" height="140" fill="rgba(255,255,255,.10)"/>
+        <g><path d="M0 66 q11 -6 22 0 t22 0 t22 0 t22 0 t22 0 V140 H0z" fill="url(#gAgua)"><animateTransform attributeName="transform" type="translate" from="0 0" to="-44 0" dur="3s" repeatCount="indefinite"/></path></g>
+      </g>
+      <path d="M30 4h26v16l12 16v92a8 8 0 0 1-8 8H26a8 8 0 0 1-8-8V36l12-16z" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="43" y="104" text-anchor="middle" fill="#fff" font-size="17" font-weight="800" font-family="Inter">60%</text>
+    </svg>
+    <div>
+      <div class="rot">Água hoje</div>
+      <div class="ml">1.500 <small>/ 2.500 ml</small></div>
+      <div class="chips">
+        <span class="chip">🔥 7 dias</span>
+        <span class="chip">⏱ próximo 15:42</span>
+        <span class="chip">🥤 6 copos</span>
+      </div>
+    </div>
+    <div class="semana">
+      <div><i class="meta" style="height:34px"></i>S</div>
+      <div><i class="meta" style="height:36px"></i>T</div>
+      <div><i class="meta" style="height:33px"></i>Q</div>
+      <div><i class="meta" style="height:38px"></i>Q</div>
+      <div><i class="meta" style="height:34px"></i>S</div>
+      <div><i style="height:22px"></i>S</div>
+      <div><i class="hoje" style="height:20px"></i>Hoje</div>
+    </div>
+  </div>
+
+  <!-- Dropdown da barra de menus -->
+  <div class="dropdown" id="dropdown" hidden>
+    <div class="topo">
+      <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" stroke="#dde4ec" stroke-width="6" fill="none"/><circle cx="22" cy="22" r="18" stroke="#2f8ff0" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="113" stroke-dashoffset="45" transform="rotate(-90 22 22)"/></svg>
+      <div><b style="font-size:15px">1.500 de 2.500 ml</b><div style="color:var(--tinta-2)">🔥 7 dias seguidos batendo a meta</div></div>
+    </div>
+    <div class="item ativo"><span>💧 Beber agora…</span><span class="tecla" style="opacity:.8">verifica pela câmera</span></div>
+    <div class="item"><span>Próximo lembrete</span><span class="tecla">15:42</span></div>
+    <hr>
+    <div class="item"><span>Histórico e conquistas…</span></div>
+    <div class="item"><span>Ajustes…</span><span class="tecla">⌘,</span></div>
+  </div>
+
+  <!-- Janela de ajustes -->
+  <div class="ajustes" id="ajustes" hidden>
+    <div class="barra"><i class="semaforo" style="background:#ff5f57"></i><i class="semaforo" style="background:#febc2e"></i><i class="semaforo" style="background:#28c840"></i><span class="tit">Ajustes do LembreteAgua</span></div>
+    <div class="corpo">
+      <div class="grupo-tit">Quando lembrar</div>
+      <div class="grupo">
+        <div class="lin"><div>Horário ativo<div class="desc">Fora desse horário a tela azul nunca aparece</div></div><div><span class="pop">09:00</span> até <span class="pop">19:00</span></div></div>
+        <div class="lin"><div>Dias da semana</div><div class="dias"><span class="on">S</span><span class="on">T</span><span class="on">Q</span><span class="on">Q</span><span class="on">S</span><span>S</span><span>D</span></div></div>
+        <div class="lin"><div>Lembrar a cada</div><div class="seg"><span>30 min</span><span class="on">45 min</span><span>60 min</span><span>90 min</span></div></div>
+      </div>
+      <div class="grupo-tit">Meta</div>
+      <div class="grupo">
+        <div class="lin"><div>Meta diária</div><div style="display:flex;align-items:center;gap:14px"><div class="slider"></div><b>2.500 ml</b></div></div>
+        <div class="lin"><div>Copo mais usado<div class="desc">Já vem selecionado na hora de beber</div></div><span class="pop">Copo · 250 ml ▾</span></div>
+      </div>
+      <div class="grupo-tit">Widget na mesa</div>
+      <div class="grupo">
+        <div class="lin"><div>Mostrar widget na área de trabalho</div><div class="switch"></div></div>
+        <div class="lin"><div>Posição</div><span class="pop">Canto inferior direito ▾</span></div>
+      </div>
+      <div class="aviso"><svg width="16" height="16" style="flex:none;margin-top:1px"><use href="#cadeado"/></svg>
+        <div><b>Anti-autoengano:</b> mudanças que deixam mais rígido valem na hora. Mudanças que afrouxam (menos horário, menos dias, intervalo maior, meta menor) só valem a partir de amanhã.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay azul -->
+<div class="overlay" id="overlay">
+  <div class="ondas">
+    <svg class="o1" viewBox="0 0 2880 200" preserveAspectRatio="none"><path d="M0 100 Q180 40 360 100 T720 100 T1080 100 T1440 100 T1800 100 T2160 100 T2520 100 T2880 100 V200 H0z" fill="#fff"/></svg>
+    <svg class="o2" viewBox="0 0 2880 200" preserveAspectRatio="none"><path d="M0 120 Q240 70 480 120 T960 120 T1440 120 T1920 120 T2400 120 T2880 120 V200 H0z" fill="#fff"/></svg>
+  </div>
+  <div class="bolhas">
+    <span style="left:8%;width:14px;height:14px;animation-duration:11s"></span>
+    <span style="left:18%;width:8px;height:8px;animation-duration:8s;animation-delay:-3s"></span>
+    <span style="left:76%;width:18px;height:18px;animation-duration:13s;animation-delay:-6s"></span>
+    <span style="left:88%;width:10px;height:10px;animation-duration:9s;animation-delay:-2s"></span>
+    <span style="left:64%;width:7px;height:7px;animation-duration:7s;animation-delay:-4s"></span>
+  </div>
+
+  <!-- 1. Lembrete -->
+  <div class="cartao" data-tela="lembrete">
+    <svg width="64" height="80"><use href="#gota"/></svg>
+    <h1>Hora de beber água</h1>
+    <p class="sub">Já faz 47 minutos desde o último copo.</p>
+    <div class="resumo">
+      <div class="anel">
+        <svg width="132" height="132" viewBox="0 0 132 132"><circle cx="66" cy="66" r="56" stroke="#e3ebf3" stroke-width="12" fill="none"/>
+          <circle cx="66" cy="66" r="56" stroke="url(#gAgua)" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="175.9" transform="rotate(-90 66 66)"/></svg>
+        <div class="centro"><b>1.250</b><span>de 2.500 ml</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="ic" style="background:#fff1e6">🔥</span><div><b>6 dias</b> seguidos na meta</div></div>
+        <div class="stat"><span class="ic" style="background:#e8f3ff">🥤</span><div><b>5 copos</b> hoje</div></div>
+        <div class="stat"><span class="ic" style="background:#eafaf0">🏆</span><div>Falta <b>1 dia</b> pra conquista</div></div>
+      </div>
+    </div>
+    <button class="btn" onclick="ir('quanto')">Beber agora</button>
+    <div class="rodape"><svg width="12" height="12"><use href="#cadeado"/></svg>A tela só libera quando a câmera te ver bebendo</div>
+  </div>
+
+  <!-- 2. Quanto -->
+  <div class="cartao" data-tela="quanto" hidden>
+    <h1>Quanto você vai beber?</h1>
+    <p class="sub">Escolha o recipiente e ajuste se precisar.</p>
+    <div class="recipientes">
+      <div class="rec"><svg viewBox="0 0 40 60" width="40"><use href="#copoP"/></svg><b>150 ml</b><span>Copo pequeno</span></div>
+      <div class="rec sel"><svg viewBox="0 0 44 60" width="44"><use href="#copo"/></svg><b>250 ml</b><span>Copo</span></div>
+      <div class="rec"><svg viewBox="0 0 60 60" width="60"><use href="#caneca"/></svg><b>350 ml</b><span>Caneca</span></div>
+      <div class="rec"><svg viewBox="0 0 34 64" width="34"><use href="#garrafa"/></svg><b>500 ml</b><span>Garrafa</span></div>
+    </div>
+    <div class="ajuste"><button class="passo">−</button><b>250 ml</b><button class="passo">+</button></div>
+    <button class="btn" onclick="ir('camera')">Abrir câmera</button>
+  </div>
+
+  <!-- 3. Câmera -->
+  <div class="cartao" data-tela="camera" hidden>
+    <h1 style="font-size:26px">Beba na frente da câmera</h1>
+    <div class="video">
+      <svg viewBox="0 0 500 320" width="500" height="320">
+        <defs><radialGradient id="pele" cx=".5" cy=".4"><stop offset="0" stop-color="#8a97a8"/><stop offset="1" stop-color="#5d6a7b"/></radialGradient></defs>
+        <rect width="500" height="320" fill="url(#fundoCam)" opacity="0"/>
+        <path d="M110 320 q20 -90 140 -96 q120 6 140 96z" fill="#3a4757"/>
+        <ellipse cx="250" cy="138" rx="62" ry="78" fill="url(#pele)" transform="rotate(-8 250 138)"/>
+        <path d="M200 70 q50 -45 110 -5 q8 20 0 30 q-50 -30 -110 -10z" fill="#2c3542"/>
+        <!-- copo na boca -->
+        <g transform="rotate(-28 298 190)">
+          <path d="M276 150h50l-7 78h-36z" fill="rgba(160,220,255,.55)" stroke="#d8f1ff" stroke-width="2.5"/>
+          <path d="M279 175h44l-5 53h-34z" fill="rgba(94,200,255,.65)"/>
+        </g>
+        <path d="M330 320 q-10 -60 -6 -95 q10 -20 30 -6 l10 101z" fill="#7f8c9c"/>
+      </svg>
+      <div class="caixa" style="left:178px;top:52px;width:140px;height:170px;border-color:#22c55e"><em style="background:#22c55e">Rosto</em></div>
+      <div class="caixa" style="left:262px;top:136px;width:96px;height:110px;border-color:#5ec8ff"><em style="background:#2f8ff0">Copo</em></div>
+      <div class="ao-vivo"><i></i>AO VIVO · nada é gravado</div>
+    </div>
+    <div class="checks">
+      <span class="check ok">✓ Rosto</span><span class="check ok">✓ Copo na boca</span><span class="check vez">● Bebendo… 1,6 s</span><span class="check">Afastar</span>
+    </div>
+    <div class="barra-prog"><i></i></div>
+    <p class="instr">Continue bebendo… só mais um pouco</p>
+    <div class="rodape" style="margin-top:8px"><svg width="12" height="12"><use href="#cadeado"/></svg>Analisado no seu Mac e descartado na hora — nenhuma foto é salva</div>
+  </div>
+
+  <!-- 4. Sucesso -->
+  <div class="cartao" data-tela="sucesso" hidden>
+    <svg width="96" height="120" viewBox="0 0 44 60"><use href="#copo"/></svg>
+    <div class="mais" style="margin-top:10px">+250 ml</div>
+    <p class="sub" style="font-size:16px;margin-top:10px">Boa! Agora são <b style="color:var(--tinta)">1.500 de 2.500 ml</b> hoje.</p>
+    <div class="barra-prog" style="margin:16px 40px 0"><i style="width:60%"></i></div>
+    <div class="conquista"><div class="med">🏅</div><div><b>Conquista desbloqueada: Uma semana inteira!</b><span>7 dias seguidos batendo a meta. Recorde pessoal.</span></div></div>
+    <div class="rodape" style="font-size:13.5px">Próximo lembrete às 15:42 · a tela some em 3 s</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button data-ir="lembrete">1 · Lembrete</button>
+  <button data-ir="quanto">2 · Quanto</button>
+  <button data-ir="camera">3 · Câmera</button>
+  <button data-ir="sucesso">4 · Sucesso</button>
+  <button data-ir="widget">5 · Widget + menu</button>
+  <button data-ir="ajustes">6 · Ajustes</button>
+</div>
+
+<script>
+const telasOverlay=['lembrete','quanto','camera','sucesso'];
+function ir(t){
+  const ov=document.getElementById('overlay');
+  ov.hidden=!telasOverlay.includes(t);
+  document.querySelectorAll('[data-tela]').forEach(c=>c.hidden=c.dataset.tela!==t);
+  document.getElementById('dropdown').hidden=t!=='widget';
+  document.getElementById('mbAgua').classList.toggle('aberto',t==='widget');
+  document.getElementById('ajustes').hidden=t!=='ajustes';
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.ir===t));
+  try{history.replaceState(null,'','#'+t)}catch(e){}
+}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>ir(b.dataset.ir));
+document.querySelectorAll('.rec').forEach(r=>r.onclick=()=>{document.querySelectorAll('.rec').forEach(x=>x.classList.remove('sel'));r.classList.add('sel');document.querySelector('.ajuste b').textContent=r.querySelector('b').textContent});
+if(new URLSearchParams(location.search).has('shot'))document.body.classList.add('shot');
+ir((location.hash||'#lembrete').slice(1));
+</script>
+</body>
+</html>
