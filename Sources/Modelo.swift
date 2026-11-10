@@ -136,7 +136,22 @@ struct Copo: Codable, Equatable, Identifiable, Hashable {
     var id = UUID()
     var nome: String
     var ml: Int
-    var icone: String   // copoPequeno | copo | caneca | garrafa
+    var icone: String          // desenho: copo, caneca, garrafa… ou modelos (quencher, owala, pacco…)
+    var cor: String = ""       // cor do produto (hex), para garrafas de marca
+    var corTampa: String = ""
+}
+
+extension Copo {
+    /// Tolerante: arquivos de versões antigas (sem cor) continuam abrindo.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = (try? c.decode(UUID.self, forKey: .id)) ?? UUID()
+        nome = (try? c.decode(String.self, forKey: .nome)) ?? "Copo"
+        ml = (try? c.decode(Int.self, forKey: .ml)) ?? 250
+        icone = (try? c.decode(String.self, forKey: .icone)) ?? "copo"
+        cor = (try? c.decode(String.self, forKey: .cor)) ?? ""
+        corTampa = (try? c.decode(String.self, forKey: .corTampa)) ?? ""
+    }
 }
 
 struct Preferencias: Codable, Equatable {
@@ -164,47 +179,6 @@ struct Preferencias: Codable, Equatable {
     var widgetEstilo = "escuro"        // escuro | claro
     var barraMenu = "ml"               // ml | pct | icone
     var verificarAtualizacoes = true   // só verifica e avisa; instalar é sempre um clique da pessoa
-}
-
-// MARK: - Catálogo de garrafas
-
-struct ModeloGarrafa: Identifiable {
-    var id: String { marca + nome }
-    let marca: String
-    let nome: String
-    let ml: Int
-    let icone: String
-}
-
-enum Catalogo {
-    static let marcas = ["Stanley", "Owala", "Hydro Flask", "Pacco", "Comum"]
-    static let garrafas: [ModeloGarrafa] = [
-        ModeloGarrafa(marca: "Stanley", nome: "Quencher 1,18 L (40 oz)", ml: 1180, icone: "copao"),
-        ModeloGarrafa(marca: "Stanley", nome: "Quencher 887 ml (30 oz)", ml: 887, icone: "copao"),
-        ModeloGarrafa(marca: "Stanley", nome: "Quencher 591 ml (20 oz)", ml: 591, icone: "copao"),
-        ModeloGarrafa(marca: "Stanley", nome: "Quencher 414 ml (14 oz)", ml: 414, icone: "copao"),
-        ModeloGarrafa(marca: "Stanley", nome: "IceFlow 887 ml (30 oz)", ml: 887, icone: "termica"),
-        ModeloGarrafa(marca: "Stanley", nome: "Clássica 1 L", ml: 1000, icone: "termica"),
-        ModeloGarrafa(marca: "Owala", nome: "FreeSip 562 ml (19 oz)", ml: 562, icone: "termica"),
-        ModeloGarrafa(marca: "Owala", nome: "FreeSip 710 ml (24 oz)", ml: 710, icone: "termica"),
-        ModeloGarrafa(marca: "Owala", nome: "FreeSip 946 ml (32 oz)", ml: 946, icone: "termica"),
-        ModeloGarrafa(marca: "Owala", nome: "FreeSip 1,18 L (40 oz)", ml: 1180, icone: "termica"),
-        ModeloGarrafa(marca: "Hydro Flask", nome: "Wide Mouth 946 ml (32 oz)", ml: 946, icone: "termica"),
-        ModeloGarrafa(marca: "Hydro Flask", nome: "Standard 621 ml (21 oz)", ml: 621, icone: "termica"),
-        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 500 ml", ml: 500, icone: "termica"),
-        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 750 ml", ml: 750, icone: "termica"),
-        ModeloGarrafa(marca: "Pacco", nome: "Garrafa térmica 1 L", ml: 1000, icone: "termica"),
-        ModeloGarrafa(marca: "Comum", nome: "Copo americano 190 ml", ml: 190, icone: "copoPequeno"),
-        ModeloGarrafa(marca: "Comum", nome: "Copo 300 ml", ml: 300, icone: "copo"),
-        ModeloGarrafa(marca: "Comum", nome: "Xícara/caneca 240 ml", ml: 240, icone: "caneca"),
-        ModeloGarrafa(marca: "Comum", nome: "Garrafinha 500 ml", ml: 500, icone: "garrafa"),
-        ModeloGarrafa(marca: "Comum", nome: "Garrafa 1,5 L", ml: 1500, icone: "garrafa"),
-    ]
-
-    static let icones: [(id: String, nome: String)] = [
-        ("copoPequeno", "Copo pequeno"), ("copo", "Copo"), ("caneca", "Caneca"),
-        ("garrafa", "Garrafa"), ("termica", "Garrafa térmica"), ("copao", "Copão com alça"),
-    ]
 }
 
 // MARK: - Estado e histórico

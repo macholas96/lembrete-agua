@@ -29,7 +29,7 @@ struct BoasVindasView: View {
             HStack {
                 if pagina > 0 {
                     Button("Voltar") { withAnimation { pagina -= 1 } }
-                        .controlSize(.large)
+                        .buttonStyle(BotaoAgua(tipo: .discreto, grande: true))
                 } else {
                     Spacer().frame(width: 80)
                 }
@@ -42,21 +42,22 @@ struct BoasVindasView: View {
                 Spacer()
                 if pagina < total - 1 {
                     Button("Continuar") { withAnimation { pagina += 1 } }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(BotaoAgua(tipo: .primario, grande: true))
                         .keyboardShortcut(.defaultAction)
                 } else {
                     Button("Começar") { aoConcluir() }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(BotaoAgua(tipo: .primario, grande: true))
                         .keyboardShortcut(.defaultAction)
                         .disabled(!permissoes.tudoOk)
+                        .opacity(permissoes.tudoOk ? 1 : 0.45)
                 }
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 20)
         }
         .frame(width: 780, height: 580)
+        .background(Marca.fundo)
+        .environment(\.colorScheme, .light)
     }
 
     // MARK: Slides
@@ -86,7 +87,7 @@ struct BoasVindasView: View {
                     Button("Mover para Aplicativos") {
                         Task { erroMover = await Instalacao.moverParaAplicativos() }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(BotaoAgua(tipo: .primario))
                     if !erroMover.isEmpty {
                         Text(erroMover).font(.system(size: 11)).foregroundColor(.secondary).multilineTextAlignment(.center)
                     }
@@ -155,8 +156,11 @@ struct BoasVindasView: View {
     private var paginaCopos: some View {
         VStack(spacing: 22) {
             HStack(spacing: 20) {
-                ForEach(["copoPequeno", "copo", "caneca", "termica", "copao"], id: \.self) { t in
-                    IconeRecipiente(tipo: t, tamanho: 64)
+                IconeRecipiente(tipo: "copo", tamanho: 64)
+                IconeRecipiente(tipo: "caneca", tamanho: 64)
+                ForEach([0, 7, 3, 14], id: \.self) { i in
+                    let g = Catalogo.garrafas[i]
+                    IconeProduto(desenho: g.desenho, cor: Color(hex: g.cor), corTampa: Color(hex: g.corTampa), tamanho: 72)
                 }
             }
             .padding(.top, 24)
@@ -203,9 +207,8 @@ struct BoasVindasView: View {
     private var paginaPermissoes: some View {
         VStack(spacing: 14) {
             titulo("Só falta permitir", "Duas permissões e pronto. Os botões levam direto para o lugar certo.")
-            Form { PainelPermissoes(permissoes: permissoes) }
-                .formStyle(.grouped)
-                .frame(height: 250)
+            PainelPermissoes(permissoes: permissoes)
+                .padding(.horizontal, 20)
             if !permissoes.tudoOk {
                 Text("O botão Começar libera assim que as duas estiverem permitidas.")
                     .font(.system(size: 12)).foregroundColor(.secondary)

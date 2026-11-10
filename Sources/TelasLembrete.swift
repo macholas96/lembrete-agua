@@ -212,7 +212,7 @@ struct TelaQuanto: View {
                         fluxo.ml = copo.ml
                     } label: {
                         VStack(spacing: 4) {
-                            IconeRecipiente(tipo: copo.icone, tamanho: 56)
+                            IconeCopo(copo: copo, tamanho: 56)
                             Text(store.fmt(copo.ml)).font(.system(size: 17, weight: .bold)).foregroundColor(Estilo.tinta)
                             Text(copo.nome).font(.system(size: 12)).foregroundColor(Estilo.tinta2).lineLimit(1)
                         }
@@ -417,7 +417,7 @@ struct TelaSucesso: View {
             + Text(" hoje.")
         VStack(spacing: 6) {
             ZStack {
-                IconeRecipiente(tipo: copoAtual, tamanho: 110)
+                IconeCopo(copo: copoAtual, tamanho: 110)
                     .mask(
                         VStack(spacing: 0) {
                             Spacer(minLength: 0)
@@ -425,7 +425,7 @@ struct TelaSucesso: View {
                         }
                         .frame(height: 110)
                     )
-                IconeRecipiente(tipo: copoAtual, tamanho: 110).opacity(0.18)
+                IconeCopo(copo: copoAtual, tamanho: 110).opacity(0.18)
             }
             Text("+\(store.fmt(fluxo.ml))")
                 .font(.system(size: 54, weight: .heavy, design: .rounded))
@@ -458,9 +458,9 @@ struct TelaSucesso: View {
         .onAppear { withAnimation(.easeOut(duration: 1.1)) { encher = 1 } }
     }
 
-    var copoAtual: String {
+    var copoAtual: Copo {
         let copos = store.prefs.copos
-        return fluxo.copoSel < copos.count ? copos[fluxo.copoSel].icone : "copo"
+        return fluxo.copoSel < copos.count ? copos[fluxo.copoSel] : Copo(nome: "Copo", ml: 250, icone: "copo")
     }
 
     var rodape: String {
