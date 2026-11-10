@@ -26,17 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/macholas96/lembrete-agua/main/insta
 
 1. Faça as mudanças em `Sources/` e envie para `main`. O GitHub Actions compila a cada push (aba Actions), e isso não afeta nenhum usuário.
 2. Aumente o número em `VERSION` (ex.: `1.2.0`) e escreva as novidades no topo do `NOVIDADES.md`.
-3. Crie e envie a tag:
-
-```bash
-git tag v1.2.0
-```
-
-```bash
-git push origin v1.2.0
-```
-
-4. O Actions compila (Apple Silicon + Intel), gera o **DMG** e o **zip** e cria a Release. A partir daí, os usuários veem "Nova versão disponível".
+3. Envie para `main`. Quando o número em `VERSION` é novo, o Actions compila (Apple Silicon + Intel), gera o **DMG** e o **zip** e cria a Release. A partir daí, os usuários veem "Nova versão disponível".
 
 ## Assinatura e notarização (para abrir sem aviso)
 

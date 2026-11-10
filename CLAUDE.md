@@ -6,12 +6,12 @@
   - `gh api repos/macholas96/lembrete-agua/actions/runs/<id>/jobs` e os logs do job que falhou.
 - **Pensar sempre em escala (N usuários):**
   - nada é instalado sem clique;
-  - atualizações saem só por Release (tag `vX.Y.Z` igual ao arquivo `VERSION`);
+  - atualizações saem só por Release, criada quando `VERSION` muda;
   - campos novos de configuração precisam de valor padrão (o `JSON.carregar` mescla com os padrões).
 - **Para lançar uma versão:**
   1. Suba o número em `VERSION` e escreva as novidades no topo de `NOVIDADES.md`.
   2. Envie para `main` e espere o build passar.
-  3. Crie a tag `vX.Y.Z` e envie (`git push origin vX.Y.Z`).
+  3. Pronto: o workflow cria a Release `vX.Y.Z` com DMG e zip sozinho quando o número é novo. Enviar para `main` sem mudar `VERSION` só compila, sem afetar usuários.
 - **Regras do produto que não podem ser quebradas:**
   - sem botão de pular;
   - Cmd+Option+Esc bloqueado durante a tela azul;
